@@ -27,8 +27,9 @@
 
 - **00: BLOCKED — SOURCE_INCOMPLETE.** Named discovery deliverables and repository map produced; inventory gate (explicit source status, no fabricated requirements) satisfied. Full completion is withheld because `docs/source/PRD.md` is missing. Provider strategy is present from an earlier user attachment. See `phase-reports/00.md`.
 - Source completeness: **BLOCKED** pending actual approved PRD and baseline reconciliation.
-- Phases 01–17 remain **TODO**, not executed; phase 01 cannot establish its complete baseline without the PRD.
-- No bootstrap, dependency installation, commit, push, deployment, or resource provisioning performed in this run.
+- Phase 01 remains **TODO**, not executed; it cannot establish its complete baseline without the PRD. Phases 03–17 remain **TODO**, not executed.
+- **02: BLOCKED — SOURCE_INCOMPLETE / PHASE_01_MISSING.** Explicit user-authorized architecture-only run produced provisional system/API/module/privacy/job/deployment contracts, six Mermaid diagrams and seven ADRs. OpenAPI and syntax/artifact checks pass; browser rendering was blocked by environment policy. Missing PRD and phase 01 baseline prevent full acceptance. See `phase-reports/02.md`.
+- Phase 00 performed no bootstrap, dependency installation, commit, push, deployment, or provisioning in its discovery run; a later separately authorized turn committed/pushed its documentation. Phase 02 performs documentation only, with validation tools installed outside the repository; no application dependencies, commit, push, deployment or provisioning.
 
 ## Release gates that code cannot waive
 

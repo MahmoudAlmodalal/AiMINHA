@@ -1,0 +1,48 @@
+sequenceDiagram
+  actor student as Verified adult student
+  participant api as Django API
+  participant db as PostgreSQL
+  participant worker as Independent worker
+  participant provider as Eligible free processor
+  participant storage as Private result storage
+  student->>api: POST generation with CSRF, snapshots and idempotency key
+  api->>db: Authorize owner, current consent and policy, lock key and limits
+  alt Same key and body already committed
+    db-->>api: Existing owned operation
+    api-->>student: Same 202 operation without another reservation
+  else Eligible new operation
+    api->>db: Atomic reservation, operation, job, audit and logical budget slot
+    db-->>api: Commit
+    api-->>student: 202 operation reference
+    worker->>db: Claim job, lease and fencing token, commit
+    worker->>db: Recheck current consent, approval, free quota and lifecycle
+    alt Gate absent or revoked before send
+      worker->>db: Record proved unsent failure and release once
+    else Allowed send
+      worker->>db: Reserve physical allowance and persist dispatch intent
+      worker->>provider: Minimized approved request with attempt identity
+      alt Timeout or outcome uncertain
+        worker->>db: RECONCILING, retain reservation and uncertain usage
+        worker->>provider: Status lookup only if documented and permitted
+      else Proved terminal refusal
+        provider-->>worker: Known outcome
+        worker->>db: Record rejection and release once with evidence
+      else Response received
+        provider-->>worker: Untrusted output and usage
+        worker->>worker: Validate schema, grounding and credentials
+        alt Invalid or ungrounded output
+          worker->>db: Reject output and release once with proof, no reroute
+        else Valid output
+          worker->>storage: Stage inaccessible valid result bytes
+          storage-->>worker: Immutable object version
+          worker->>db: Check fence and consent, atomic result, debit, completion and audit
+          db-->>worker: Commit accepted result or reject stale finalize
+        end
+      end
+    end
+  else Admission gate denied
+    api-->>student: Safe error with no reservation or provider send
+  end
+  student->>api: GET owned operation
+  api->>db: Reauthorize owner and lifecycle
+  api-->>student: State and accepted result reference only after settlement

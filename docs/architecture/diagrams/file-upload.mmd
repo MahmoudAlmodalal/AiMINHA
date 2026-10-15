@@ -1,0 +1,34 @@
+sequenceDiagram
+  actor student as Verified adult owner
+  participant api as Django API
+  participant db as PostgreSQL
+  participant storage as Private quarantine storage
+  participant worker as Scan worker
+  participant scanner as Approved sandbox scanner
+  student->>api: Initiate upload with CSRF and idempotency key
+  api->>db: Check owner, scanner health and reserve bounded storage
+  alt Gate missing
+    api-->>student: Safe unavailable response and manual alternative
+  else Allowed initiation
+    api-->>student: Expiring bounded quarantine-only capability
+    student->>storage: Upload to exact random object key
+    storage-->>student: Object version
+    student->>api: Complete with object version and checksum
+    api->>storage: Verify actual byte size, hash and immutable identity
+    api->>db: Bind owned version and enqueue scan once
+    api-->>student: 202 QUARANTINED, inaccessible
+    worker->>db: Claim fenced scan job
+    worker->>scanner: Scan exact version and bounded format content
+    scanner->>storage: Read quarantine object only
+    alt Scanner outage, malware or invalid format
+      scanner-->>worker: Unavailable or rejected
+      worker->>db: Keep inaccessible or reject and schedule purge
+    else Exact version is clean
+      scanner-->>worker: Clean verdict for object hash and version
+      worker->>storage: Place clean immutable bytes in private accepted namespace
+      worker->>db: Atomic fenced acceptance, storage accounting and audit
+    end
+    student->>api: Request owned download capability with CSRF
+    api->>db: Recheck owner, lifecycle and ACCEPTED version
+    api-->>student: Short private read capability or deny
+  end

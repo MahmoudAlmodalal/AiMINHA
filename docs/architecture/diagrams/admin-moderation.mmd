@@ -1,0 +1,27 @@
+sequenceDiagram
+  participant source as Permitted scholarship source
+  participant worker as Ingestion worker
+  participant db as PostgreSQL
+  actor moderator as Authorized moderator
+  participant api as Django API
+  participant visitor as Public catalog client
+  worker->>db: Check source permission and ingestion flag
+  worker->>source: Retrieve permitted untrusted facts
+  source-->>worker: Facts and provenance
+  worker->>db: Save candidate and evidence, never publish
+  moderator->>api: Review candidate through scoped admin interface
+  api->>db: Authorize moderator and return candidate version
+  api-->>moderator: Evidence and version ETag
+  moderator->>api: Publish with CSRF, If-Match, evidence and idempotency key
+  api->>db: Lock candidate, check current source permission and complete facts
+  alt Stale version or source permission missing
+    api-->>moderator: 412 or safe denial, no publication
+  else Reviewed permitted valid facts
+    api->>db: Atomic immutable published version, audit and outbox
+    db-->>api: Commit
+    api-->>moderator: Published version
+    worker->>db: Deliver deduplicated publication outbox event
+    visitor->>api: Public scholarship search
+    api->>db: Read published projection only
+    api-->>visitor: Approved facts and verification state
+  end

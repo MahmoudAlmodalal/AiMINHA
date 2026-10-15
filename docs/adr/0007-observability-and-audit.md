@@ -1,0 +1,9 @@
+# ADR 0007 — Metadata observability and append-only audit
+
+Status: PROPOSED / ASSUMPTION. Traces A; D OQ-007/023; P §2.8/§4. Context: operation recovery and denied access need evidence without collecting student content.
+
+Decision: correlation and operation IDs across API/worker/provider attempt; allowlisted metadata logs/metrics and transactional append-only audit. Commit mutation and its audit/outbox together, or neither; denied requests persist separate metadata audit even when business transaction rolls back. Admin private-library denial must produce 403 and audit. If audit cannot persist, deny sensitive access/mutation and alert via redacted operational signal; do not claim auditable success.
+
+Events carry actor/resource IDs, policy versions, outcome/reason, provider/model, attempt usage, timestamps. Never raw HTTP bodies, query secrets, prompts/responses, CVs, DOB/email, passwords/OTP/session tokens or bearer URLs. Disable library automatic request/body logging, redact exception traces and vendor response payloads. Metrics: oldest runnable queue age, lease expiry, reconciling age, reservation/debit invariant failures, quota headroom, scanner unavailable, auth/ownership denies, backup restore result. No user-ID metric labels with unbounded cardinality or third-party marketing trackers.
+
+Proposed 90-day content-free security log retention follows D OQ-023 but needs legal approval; financial-like audit retention is MISSING pending policy, not automatically identical. Audit consumers have least-privilege read roles, no write/delete via platform admin; authorized retention jobs apply approved deletion exceptions with evidence. Alerts contain metadata only. Rejected alternatives: raw prompt observability or treating mutable application logs as complete audit. Tests of redaction/audit atomicity/downtime remain future work.

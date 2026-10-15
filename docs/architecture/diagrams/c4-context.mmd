@@ -1,0 +1,11 @@
+C4Context
+  title MinhaAI proposed system context
+  Person(student, "Student or visitor", "Public browsing; verified adult personalization")
+  Person(staff, "Assigned staff", "Moderation and scoped ticket support")
+  System(minhaai, "MinhaAI", "Scholarship assistance; no automatic submission or public Beta payments")
+  System_Ext(source, "Permitted scholarship sources", "Approved use and publication review")
+  System_Ext(ai, "Eligible free AI processors", "Public or individually approved private-data routes")
+  Rel(student, minhaai, "Browse and issue owned commands", "HTTPS")
+  Rel(staff, minhaai, "Moderate and access assigned attachments only", "HTTPS")
+  Rel(minhaai, source, "Retrieve permitted untrusted facts for review", "HTTPS")
+  Rel(minhaai, ai, "Minimized approved and budgeted payloads", "HTTPS")

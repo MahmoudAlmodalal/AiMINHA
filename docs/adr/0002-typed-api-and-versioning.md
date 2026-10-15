@@ -1,0 +1,9 @@
+# ADR 0002 — Typed API contracts and versioning
+
+Status: PROPOSED / ASSUMPTION. Traces U02; A typed contracts; D OQ-016; P §2. Context: independent web/API deployments and retries must not invent payload, price or authorization behavior.
+
+Decision: OpenAPI 3.1 draft under `/api/v1`, explicit JSON DTO schemas, `additionalProperties:false` on client objects, stable problem+json codes, no ORM serialization as module contracts. Draft scope is the documented generation/upload/moderation/session/catalog flows, not full PRD. DRF implementation will be checked against this contract; generate TypeScript types/client only after baseline/schema approval and bootstrap. Either derive schema from annotated DRF serializers with contract-diff validation or implement from this draft, but do not maintain competing unreviewed sources.
+
+Major URL version for breaking route/payload/semantic changes; additive optional fields reviewed against strict client compatibility. New enum values are potentially breaking. Pin frontend/backend compatibility during rollout and deprecate with release record, never change v1 price/ownership semantics silently. Paginated/filtered schemas, ETags, scoped idempotency and errors are normative within `api-contracts.md`; full feature endpoints remain undeclared pending baseline. Validate currency-like Credits as integers and timestamps as UTC instants.
+
+Consequences: schema review and drift tests in implementation CI required; generated types alone cannot test permission/CSRF/privacy. Rejected alternatives: undocumented JSON and premature GraphQL; neither resolves authorization gaps. Missing PRD/feature matrix blocks complete contract coverage.
