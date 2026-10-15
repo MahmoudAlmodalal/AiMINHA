@@ -1,11 +1,19 @@
-# Phase 00 source discrepancies
+# Current requirement conflicts and dispositions
 
-This is a discovery record required by AGENTS.md §Source hierarchy, not phase 01 requirements decomposition. PRD absent: **MISSING**; no PRD conflict audit can be completed.
+2026-10-15. **PASS — conflicts identified and bounded; no silent source overrides.** Supplied PRD/decision/provider files are unchanged. Latest [owner directions](../source/2026-10-15-owner-decisions.md) authorize 00–03 documentation and Admin-configurable recovery. [Matrix](feature-matrix.md), [rules](business-rules.md), [gate register](missing-inputs.md) distinguish completed design from unexecuted external evidence.
 
-| ID | Evidence | Disposition / isolated area |
+| ID | Evidence | Current disposition / isolated area |
 |---|---|---|
-| C00-01 | Pack README and phase 00 prompt describe provider strategy as absent; earlier user attachment supplies it | Historical pack inventory statement. Current inventory records strategy PRESENT and PRD MISSING; preserved source/workflow wording unchanged. |
-| C00-02 | S3 §5 calls all five decisions TBD; S2 §ب/OQ-016/021 supplies overlapping caps, ledger timing and quality targets | Defaults and validation questions are different authority/evidence categories. Exact retry/concurrency/models and measured quality remain unresolved. No routing/credit implementation proceeds here. |
-| C00-03 | S2 OQ-024 awaits repository identity/PRD binding | User identified AiMINHA remote and initial commit now exists. PRD binding/approval still absent; do not call requirements authority complete. |
+| C00-01 | Original pack README/prompt says PRD/provider strategy absent; standalone attachments supply them | RESOLVED availability. PRD v3.0.0 and provider strategy present/byte-preserved; pack wording is historical, not current source inventory. |
+| C00-02 | Provider strategy §5 calls decisions TBD; decision resolution §ب gives overlapping caps/quality/timing defaults | No approval conflict: numerical defaults are proposals; actual contractual/meter/quality evidence remains G-PROVIDER/G-MEASURE. No fabricated vendor clearance. |
+| C00-03 | Decision OQ-024 awaited repository identity | RESOLVED: user confirmed MahmoudAlmodalal/AiMINHA; source at docs/source/PRD.md per AGENTS.md. No push/commit granted. |
+| C03-01 | PRD header/§27.1 says revision owner approval Not yet recorded; original interview attachments not supplied | Working baseline supplied and UD-002 authorizes completion. Do not invent retroactive signature/provenance; formal release approval G-SIGNOFF remains external, not a blocker to requirement enumeration/design. |
+| C03-02 | PRD 30 calendar days versus older analyst 30×24h elapsed default | RESOLVED FOR DESIGN by UD-001: Admin configures versioned period, default calendar basis follows PRD; ADR0008 explicitly labels zone/DST details engineering assumptions. Each deletion freezes days/zone/algorithm/policy/computed restore_until; future edits cannot move it. No unconditional 720h rule; real legal retention envelope still G-LEGAL. |
+| C03-03 | Initial five proposed support states differed from PRD FR-099 six states | RESOLVED: NEW/AI_HANDLING/AWAITING_ADMIN/AWAITING_STUDENT/RESOLVED/CLOSED in schema/state/API. Support is scoped Admin, not a new formal role. |
+| C03-04 | PRD Advanced MVP requires manual paid flows; explicit later owner decision chooses Public Free Beta/payments off | Distinct releases: Beta payments disabled; Advanced F-10/FR-080–088 remain Must in matrix/backlog, require G-PAID and separately authorized implementation. No stealth scope deletion or invented currency/account. |
+| C03-05 | PRD private-file support exception TBD; owner decision forbids library browsing and permits explicit assigned ticket shares | Apply narrower explicit owner boundary: Admin library 403+audit, current assigned exact accepted share only; no general break-glass or broad document exception. |
+| C03-06 | PRD vendors/technology nonbinding, AGENTS.md repository stack directed, decision proposals name vendors | Engineering Next/Django/Postgres design follows project instructions; no product/vendor/legal approval inferred. Provider preference only within separately approved data-class/model/region/free quota. |
 
-No direct contradiction is established between the available private-data boundaries. No silent decision override was made. Revisit against actual PRD in the requirements phase.
+Historical reports initially marked source missing/Phase01 unexecuted. Those were true at the initial runs, superseded by current inventory and completion reports; no historical failure is presented as a present absence. PRD product delivery phases differ from agent prompts 00–17. Latest task authorizes prompts00–02 plus active03 reconciliation, not UX/bootstrap/implementation.
+
+Open external/feature decisions are individually named in missing-inputs.md and mapped to rows in feature-matrix.md. Unapproved academic proof scales, leap-day legal edge, rating scale/warning routes, official-status correction and live provider/source/storage/hosting/legal/quality evidence have explicit fail-closed/Unknown/manual paths. Their absence cannot be disguised by a phase PASS; their test plans exist and runtime tests remain NOT RUN.

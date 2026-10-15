@@ -1,0 +1,1445 @@
+// Phase 03 PROPOSED design. No migration or runtime implementation.
+// Authority, ownership classes, checks/triggers/RLS and traces: schema-notes.md.
+// DBML expresses keys and FKs; the named enforcement rules in schema-notes.md
+// are REQUIRED parts of this design, not optional application validation.
+Project MinhaAI {
+  database_type: 'PostgreSQL'
+  Note: 'DOCUMENTED DESIGN: PRD/Phase01/Phase02 reconciled; UD-001 configurable recovery; external launch gates remain. See schema-notes.md and state-machines.md.'
+}
+Enum operation_state {
+  RESERVED
+  RUNNING
+  RECONCILING
+  SETTLED
+  RELEASED
+}
+Enum ticket_state {
+  NEW
+  AI_HANDLING
+  AWAITING_ADMIN
+  AWAITING_STUDENT
+  RESOLVED
+  CLOSED
+}
+Enum application_state {
+  PREPARING
+  READY
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+Table users {
+  id uuid [pk]
+  formal_role varchar [not null, note: 'STUDENT or ADMIN only; no self-provisioned Admin']
+  email_normalized varchar [not null, unique]
+  password_hash varchar
+  birth_date date
+  email_verified_at timestamptz
+  adult_checked_at timestamptz
+  adult_evaluated_local_date date
+  adult_policy_id uuid
+  state varchar [not null, note: 'PENDING, ACTIVE, DELETION_PENDING, PURGING, DELETED']
+  row_version bigint [not null]
+  created_at timestamptz [not null]
+  deleted_at timestamptz
+  Note: 'IDENTITY_PRIVATE; canonical lifetime identity. R02/R06/R21. Not a public or generic staff-readable user table.'
+}
+
+Table auth_identities {
+  owner_id uuid [not null]
+  id uuid [pk]
+  provider varchar [not null]
+  subject varchar [not null]
+  linked_at timestamptz [not null]
+  indexes {
+    (provider, subject) [unique]
+    (owner_id, id) [unique]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table verification_challenges {
+  owner_id uuid [not null]
+  id uuid [pk]
+  purpose varchar [not null]
+  deletion_request_id uuid
+  token_digest varchar [not null, unique]
+  expires_at timestamptz [not null]
+  consumed_at timestamptz
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, purpose, expires_at)
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table role_grants {
+  id uuid [pk]
+  principal_id uuid [not null]
+  scope varchar [not null]
+  granted_by uuid [not null]
+  evidence_ref varchar [not null]
+  created_at timestamptz [not null]
+  revoked_at timestamptz
+  indexes {
+    (principal_id, scope, revoked_at)
+  }
+  Note: 'PLATFORM_RESTRICTED; active grant uniqueness is a partial index, R03. No role implies library read.'
+}
+
+Table profiles {
+  owner_id uuid [not null]
+  current_version bigint
+  row_version bigint [not null]
+  updated_at timestamptz [not null]
+  indexes {
+    owner_id [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table profile_versions {
+  owner_id uuid [not null]
+  version bigint [not null]
+  facts jsonb [not null, note: 'Typed nationality/residency, degree, field, qualification, GPA+scale, language, preferences; Unknown explicit']
+  content_hash varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, version) [pk]
+  }
+  Note: 'TENANT immutable snapshot; lawful erasure only through R21 purge role.'
+}
+
+Table consent_heads {
+  owner_id uuid [not null]
+  current_version bigint
+  row_version bigint [not null]
+  indexes {
+    owner_id [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table consent_versions {
+  owner_id uuid [not null]
+  version bigint [not null]
+  state varchar [not null, note: 'GRANTED, REVOKED']
+  disclosure_version varchar [not null]
+  scopes jsonb [not null, note: 'Purposes, data types, provider/model/region envelope; attachment processing separate']
+  evidence_hash varchar [not null]
+  recorded_at timestamptz [not null]
+  indexes {
+    (owner_id, version) [pk]
+  }
+  Note: 'TENANT immutable full consent bundle. Revocation appends a version, never edits old consent.'
+}
+
+Table account_deletion_requests {
+  owner_id uuid [not null]
+  id uuid [pk]
+  confirmed_at timestamptz [not null]
+  prior_user_state varchar [not null, note: 'PENDING or ACTIVE, captured under user lock']
+  restore_until timestamptz [not null]
+  recovery_days integer [not null]
+  recovery_timezone varchar [not null]
+  cutoff_algorithm varchar [not null, note: 'CALENDAR_DAYS_LOCAL; immutable request snapshot per ADR0008']
+  state varchar [not null, note: 'PENDING, RESTORED, PURGING, PURGED']
+  restored_at timestamptz
+  purge_started_at timestamptz
+  purged_at timestamptz
+  policy_id uuid [not null]
+  indexes {
+    (owner_id, id) [unique]
+    (state, restore_until)
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table policy_versions {
+  id uuid [pk]
+  kind varchar [not null]
+  version bigint [not null]
+  values jsonb [not null, note: 'Validated per kind; no secrets; operational caps, retention, calendar, eligibility weights, flags']
+  content_hash varchar [not null]
+  created_by uuid [not null]
+  created_by_kind varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (kind, version) [unique]
+  }
+  Note: 'PLATFORM_RESTRICTED immutable version; numerical seeds remain sourced analyst defaults. R07/R20.'
+}
+
+Table platform_setting_heads {
+  key varchar [pk]
+  policy_id uuid [not null]
+  row_version bigint [not null]
+  effective_at timestamptz [not null]
+  Note: 'PLATFORM_RESTRICTED. CAS head update plus audit; flags cannot create external approval.'
+}
+
+Table platform_idempotency_requests {
+  id uuid [pk]
+  actor_id uuid [not null]
+  route varchar [not null]
+  target_key varchar [not null]
+  client_key varchar [not null]
+  request_hash varchar [not null]
+  response_metadata jsonb [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (actor_id, route, target_key, client_key) [unique]
+  }
+  Note: 'PLATFORM_RESTRICTED immutable command binding for publication/configuration; reauthorize replay, R10.'
+}
+
+Table service_prices {
+  policy_id uuid [not null]
+  service_kind varchar [not null]
+  credits bigint [not null]
+  chargeable boolean [not null]
+  indexes {
+    (policy_id, service_kind) [pk]
+    (policy_id, service_kind, credits) [unique]
+  }
+  Note: 'Immutable typed price rows; absent price denies funded AI. Zero allowed only explicit free service.'
+}
+
+Table processor_approvals {
+  id uuid [pk]
+  provider varchar [not null]
+  model varchar [not null]
+  region varchar [not null]
+  data_class varchar [not null]
+  purpose varchar [not null]
+  data_types jsonb [not null]
+  contract_evidence_ref varchar [not null]
+  security_evidence_ref varchar [not null]
+  controls jsonb [not null, note: 'Retention, no-training, ZDR where required, free-only account evidence']
+  valid_from timestamptz [not null]
+  valid_until timestamptz [not null]
+  revoked_at timestamptz
+  approved_by uuid [not null]
+  indexes {
+    (provider, model, region, purpose, data_class, valid_until)
+  }
+  Note: 'PLATFORM_RESTRICTED; envelope immutable; revoke only by guarded command. No seeded approvals. R12.'
+}
+
+Table scholarship_sources {
+  id uuid [pk]
+  canonical_domain varchar [not null, unique]
+  source_type varchar [not null]
+  state varchar [not null]
+  created_at timestamptz [not null]
+  Note: 'CATALOG_RESTRICTED source registry; public projection excludes permission internals.'
+}
+
+Table source_permissions {
+  id uuid [pk]
+  source_id uuid [not null]
+  permitted_uses jsonb [not null]
+  evidence_ref varchar [not null]
+  reviewed_by uuid [not null]
+  valid_from timestamptz [not null]
+  valid_until timestamptz [not null]
+  revoked_at timestamptz
+  indexes {
+    (source_id, id) [unique]
+  }
+  Note: 'CATALOG_RESTRICTED; no ingest/publication without current scope-specific permission.'
+}
+
+Table scholarships {
+  id uuid [pk]
+  canonical_key varchar [not null, unique]
+  published_version bigint
+  visibility varchar [not null, note: 'UNPUBLISHED, PUBLIC, REVERIFY, SUSPENDED, ARCHIVED']
+  row_version bigint [not null]
+  archived_at timestamptz
+  Note: 'CATALOG; public security-barrier projection only. Published pointer is moderated, not latest draft.'
+}
+
+Table scholarship_versions {
+  scholarship_id uuid [not null]
+  version bigint [not null]
+  facts jsonb [not null]
+  content_hash varchar [not null]
+  created_by uuid
+  created_by_kind varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (scholarship_id, version) [pk]
+  }
+  Note: 'CATALOG_RESTRICTED immutable facts incl. unknown flags. New fact edit creates version; R08.'
+}
+
+Table scholarship_provenance {
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  source_id uuid [not null]
+  permission_id uuid [not null]
+  evidence_uri varchar [not null]
+  evidence_hash varchar [not null]
+  fetched_at timestamptz [not null]
+  indexes {
+    (scholarship_id, scholarship_version, source_id, evidence_hash) [pk]
+  }
+  Note: 'CATALOG_RESTRICTED immutable provenance for facts; source text is untrusted.'
+}
+
+Table moderation_events {
+  id uuid [pk]
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  sequence bigint [not null]
+  decision varchar [not null, note: 'REVIEW_REQUESTED, APPROVED, REJECTED, SUSPENDED']
+  actor_id uuid [not null]
+  reason_code varchar [not null]
+  evidence_ref varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (scholarship_id, scholarship_version, sequence) [unique]
+  }
+  Note: 'CATALOG_RESTRICTED append-only; guarded publish also audits and enqueues outbox.'
+}
+
+Table eligibility_criteria {
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  criterion_key varchar [not null]
+  mandatory boolean [not null]
+  rule jsonb [not null]
+  evidence_ref varchar [not null]
+  known boolean [not null]
+  indexes {
+    (scholarship_id, scholarship_version, criterion_key) [pk]
+  }
+  Note: 'CATALOG_RESTRICTED version-bound deterministic criteria; no mutable latest-rule substitution.'
+}
+
+Table saved_opportunities {
+  owner_id uuid [not null]
+  scholarship_id uuid [not null]
+  created_at timestamptz [not null]
+  deleted_at timestamptz
+  indexes {
+    (owner_id, scholarship_id) [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table eligibility_evaluations {
+  owner_id uuid [not null]
+  id uuid [pk]
+  profile_version bigint [not null]
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  engine_policy_id uuid [not null]
+  status varchar [not null, note: 'ELIGIBLE, INELIGIBLE, UNKNOWN']
+  coverage_bps integer [not null]
+  score_bps integer
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, id, scholarship_id, scholarship_version) [unique]
+    (owner_id, profile_version, scholarship_id, scholarship_version, engine_policy_id) [unique]
+  }
+  Note: 'TENANT immutable rules result; score only with sufficient known evidence, never admission probability. R09.'
+}
+
+Table eligibility_checks {
+  owner_id uuid [not null]
+  evaluation_id uuid [not null]
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  criterion_key varchar [not null]
+  status varchar [not null, note: 'PASS, FAIL, UNKNOWN']
+  evidence jsonb [not null]
+  indexes {
+    (owner_id, evaluation_id, criterion_key) [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table idempotency_requests {
+  owner_id uuid [not null]
+  id uuid [pk]
+  route varchar [not null]
+  target_key varchar [not null]
+  client_key varchar [not null]
+  request_hash varchar [not null]
+  operation_id uuid
+  response_metadata jsonb [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, route, target_key, client_key) [unique]
+  }
+  Note: 'TENANT immutable binding after effect; response metadata excludes private bodies/capability URLs. R10.'
+}
+
+Table operations {
+  owner_id uuid [not null]
+  id uuid [pk, note: 'Stable operation_id across all transport/worker retries']
+  request_id uuid [not null]
+  service_kind varchar [not null]
+  state operation_state [not null]
+  row_version bigint [not null]
+  profile_version bigint
+  scholarship_id uuid
+  scholarship_version bigint
+  consent_version bigint
+  ticket_id uuid
+  price_policy_id uuid [not null]
+  price_credits bigint [not null]
+  price_snapshot jsonb [not null]
+  price_authorized_at timestamptz [not null]
+  authorization_evidence_hash varchar [not null]
+  output_language varchar
+  input_manifest_hash varchar [not null]
+  data_class varchar [not null]
+  student_day date [not null]
+  global_day date [not null]
+  created_at timestamptz [not null]
+  reservation_expires_at timestamptz [not null]
+  reconcile_due_at timestamptz [not null]
+  terminal_at timestamptz
+  reason_code varchar
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, request_id) [unique]
+    (owner_id, id, ticket_id) [unique]
+    (state, reservation_expires_at)
+    (owner_id, created_at, id)
+  }
+  Note: 'TENANT immutable task tuple except guarded lifecycle fields. R10-R15; mandatory conditional snapshots in R07.'
+}
+
+Table credit_wallets {
+  owner_id uuid [not null]
+  posted_balance bigint [not null]
+  reserved_balance bigint [not null]
+  row_version bigint [not null]
+  indexes {
+    owner_id [pk]
+  }
+  Note: 'TENANT accounting projection, not editable balance. R11: posted >= reserved >= 0; journal equality deferred.'
+}
+
+Table credit_reservations {
+  owner_id uuid [not null]
+  operation_id uuid [not null]
+  amount bigint [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, operation_id) [pk]
+  }
+  Note: 'TENANT one hold per op, amount=server price including explicit zero for free AI; derived active state from operation.'
+}
+
+Table credit_adjustments {
+  owner_id uuid [not null]
+  id uuid [pk]
+  amount bigint [not null]
+  state varchar [not null, note: 'REQUESTED, APPROVED, REJECTED, APPLIED']
+  requested_by uuid [not null]
+  approved_by uuid
+  reason_code varchar [not null]
+  evidence_ref varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+  }
+  Note: 'TENANT accounting metadata; human scoped workflow, never AI. No payment top-up in Beta. R11.'
+}
+
+Table credit_entries {
+  owner_id uuid [not null]
+  id uuid [pk]
+  kind varchar [not null, note: 'SIGNUP_GRANT, DEBIT, ADJUSTMENT, REVERSAL, DELETION_CANCEL']
+  amount bigint [not null, note: 'Signed integer Credits, never floats or provider currency']
+  operation_id uuid
+  adjustment_id uuid
+  reverses_entry_id uuid
+  actor_id uuid
+  actor_kind varchar [not null]
+  reason_code varchar [not null]
+  policy_id uuid [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, operation_id, id) [unique]
+    (owner_id, created_at, id)
+  }
+  Note: 'TENANT append-only signed journal; partial unique signup/debit/adjustment indexes, bounded reversal and atomic terminal proof in R11/R14.'
+}
+
+Table student_daily_usage {
+  owner_id uuid [not null]
+  local_day date [not null]
+  credits_reserved bigint [not null]
+  credits_settled bigint [not null]
+  support_accepted bigint [not null]
+  current_policy_id uuid [not null]
+  indexes {
+    (owner_id, local_day) [pk]
+  }
+  Note: 'TENANT Asia/Hebron day; policy is NOT part of key. Nonnegative; counter conservation/admission predicate R13.'
+}
+
+Table global_daily_usage {
+  local_day date [pk]
+  logical_accepted bigint [not null]
+  current_policy_id uuid [not null]
+  Note: 'PLATFORM_RESTRICTED Asia/Hebron logical AI ops; free support included; failures do not recycle slots. R13.'
+}
+
+Table jobs {
+  owner_id uuid [not null]
+  id uuid [pk]
+  kind varchar [not null]
+  operation_id uuid
+  file_asset_id uuid
+  notification_id uuid
+  state varchar [not null]
+  dedupe_key varchar [not null]
+  request_hash varchar [not null]
+  not_before timestamptz [not null]
+  lease_until timestamptz
+  lease_token bigint [not null]
+  worker_ref varchar
+  attempt_count integer [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, operation_id, id) [unique]
+    (owner_id, kind, dedupe_key) [unique]
+    (state, not_before)
+  }
+  Note: 'TENANT scoped durable jobs. Exactly one typed target for kind, no raw payload/log contents; R15.'
+}
+
+Table platform_jobs {
+  id uuid [pk]
+  kind varchar [not null, note: 'Allowlisted catalog/outbox/aggregate housekeeping only']
+  source_id uuid
+  observation_id uuid
+  dedupe_key varchar [not null]
+  state varchar [not null]
+  not_before timestamptz [not null]
+  lease_token bigint [not null]
+  lease_until timestamptz
+  indexes {
+    (kind, dedupe_key) [unique]
+  }
+  Note: 'PLATFORM_RESTRICTED; no student resource IDs/payloads and no private handler authority.'
+}
+
+Table ai_calls {
+  owner_id uuid [not null]
+  id uuid [pk]
+  operation_id uuid [not null]
+  job_id uuid [not null]
+  lease_token bigint [not null]
+  attempt_no integer [not null]
+  processor_approval_id uuid [not null]
+  state varchar [not null, note: 'PLANNED, DISPATCH_INTENT, SUCCEEDED, KNOWN_FAILED, UNKNOWN']
+  provider_request_ref varchar
+  input_hash varchar [not null]
+  intent_at timestamptz
+  completed_at timestamptz
+  safe_error_code varchar
+  usage_evidence_ref varchar
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, operation_id, attempt_no) [unique]
+    (owner_id, operation_id, id) [unique]
+    (state, intent_at)
+  }
+  Note: 'TENANT metadata only; no prompts/responses. One unresolved attempt per operation via partial index R12/R15.'
+}
+
+Table provider_budget_windows {
+  id uuid [pk]
+  quota_key varchar [not null, note: 'Provider account + model/shared pool + metric; never an API key']
+  metric varchar [not null]
+  window_start timestamptz [not null]
+  window_end timestamptz [not null]
+  reset_zone varchar [not null]
+  reserved_units bigint [not null]
+  consumed_units bigint [not null]
+  current_policy_id uuid [not null]
+  indexes {
+    (quota_key, metric, window_start) [unique]
+  }
+  Note: 'PLATFORM_RESTRICTED accounting only. Authoritative bound/reset evidence required; R13.'
+}
+
+Table provider_allocations {
+  owner_id uuid [not null]
+  ai_call_id uuid [not null]
+  budget_window_id uuid [not null]
+  reserved_units bigint [not null]
+  measured_units bigint
+  state varchar [not null, note: 'RESERVED, MEASURED, UNKNOWN, RELEASED']
+  evidence_ref varchar
+  indexes {
+    (owner_id, ai_call_id, budget_window_id) [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table file_assets {
+  owner_id uuid [not null]
+  id uuid [pk]
+  object_key varchar [not null, unique]
+  object_version varchar
+  sha256 varchar
+  original_filename varchar [not null]
+  declared_bytes bigint [not null]
+  capacity_state varchar [not null, note: 'RESERVED, RETAINED, RELEASED']
+  capacity_bytes bigint [not null]
+  actual_bytes bigint
+  validated_mime varchar
+  purpose varchar [not null]
+  state varchar [not null, note: 'INITIATED, QUARANTINED, SCANNING, ACCEPTED, REJECTED, PURGE_PENDING, PURGED']
+  storage_policy_id uuid [not null]
+  created_at timestamptz [not null]
+  expires_at timestamptz
+  deleted_at timestamptz
+  purged_at timestamptz
+  purge_receipt_ref varchar
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, id, object_version, sha256) [unique]
+    (state, expires_at)
+  }
+  Note: 'TENANT immutable accepted object binding; scanner/storage quota/erasure rules R16/R21. No staff SELECT grant.'
+}
+
+Table file_scan_results {
+  owner_id uuid [not null]
+  id uuid [pk]
+  file_asset_id uuid [not null]
+  object_version varchar [not null]
+  sha256 varchar [not null]
+  scanner_version varchar [not null]
+  verdict varchar [not null]
+  validation_evidence jsonb [not null]
+  scanned_at timestamptz [not null]
+  indexes {
+    (owner_id, file_asset_id, object_version, sha256, scanner_version) [unique]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table storage_usage {
+  owner_id uuid [not null]
+  reserved_bytes bigint [not null]
+  retained_bytes bigint [not null]
+  current_policy_id uuid [not null]
+  indexes {
+    owner_id [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table global_storage_usage {
+  singleton boolean [pk]
+  reserved_bytes bigint [not null]
+  retained_bytes bigint [not null]
+  current_policy_id uuid [not null]
+  Note: 'PLATFORM_RESTRICTED singleton must be true; count quarantine/staging/exports/attachments and unconfirmed deletions. R16.'
+}
+
+Table documents {
+  owner_id uuid [not null]
+  id uuid [pk]
+  kind varchar [not null]
+  title varchar [not null]
+  variant_of_document_id uuid
+  scholarship_id uuid
+  scholarship_version bigint
+  current_version bigint
+  row_version bigint [not null]
+  created_at timestamptz [not null]
+  deleted_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table document_versions {
+  owner_id uuid [not null]
+  document_id uuid [not null]
+  version bigint [not null]
+  source_operation_id uuid
+  restored_from_version bigint
+  language varchar [not null]
+  body jsonb [not null]
+  content_hash varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, document_id, version) [pk]
+    (owner_id, source_operation_id) [unique]
+    (owner_id, source_operation_id, document_id, version) [unique]
+  }
+  Note: 'TENANT immutable manual/generated version; submitted references never follow current head. R07/R17.'
+}
+
+Table document_exports {
+  owner_id uuid [not null]
+  document_id uuid [not null]
+  document_version bigint [not null]
+  format varchar [not null]
+  renderer_version varchar [not null]
+  file_asset_id uuid [not null]
+  indexes {
+    (owner_id, document_id, document_version, format, renderer_version) [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table operation_inputs {
+  owner_id uuid [not null]
+  operation_id uuid [not null]
+  file_asset_id uuid [not null]
+  ticket_id uuid
+  ticket_attachment_id uuid
+  purpose varchar [not null]
+  indexes {
+    (owner_id, operation_id, file_asset_id) [pk]
+  }
+  Note: 'TENANT immutable input manifest; accepted exact asset required; support attachment purpose needs dedicated consent R07/R12/R16.'
+}
+
+Table operation_results {
+  owner_id uuid [not null]
+  id uuid [pk]
+  operation_id uuid [not null]
+  ai_call_id uuid [not null]
+  result_kind varchar [not null]
+  document_id uuid
+  document_version bigint
+  eligibility_evaluation_id uuid
+  validated_payload jsonb
+  content_hash varchar [not null]
+  validation_policy_id uuid [not null]
+  validation_evidence_hash varchar [not null]
+  accepted_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, operation_id) [unique]
+    (owner_id, operation_id, id) [unique]
+  }
+  Note: 'TENANT immutable accepted output; one per operation; type-specific references, current lifecycle/consent and debit atomic R14.'
+}
+
+Table operation_finalizations {
+  owner_id uuid [not null]
+  operation_id uuid [not null]
+  outcome operation_state [not null]
+  result_id uuid
+  debit_entry_id uuid
+  evidence_ref varchar [not null]
+  finalized_at timestamptz [not null]
+  indexes {
+    (owner_id, operation_id) [pk]
+  }
+  Note: 'TENANT append-only terminal witness, only SETTLED or RELEASED. Deferred commit checks R14 forbid missing or conflicting result/debit.'
+}
+
+Table applications {
+  owner_id uuid [not null]
+  id uuid [pk]
+  scholarship_id uuid [not null]
+  round_key varchar [not null]
+  notes text
+  state application_state [not null]
+  head_sequence bigint
+  submitted_sequence bigint
+  row_version bigint [not null]
+  created_at timestamptz [not null]
+  deleted_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, id, scholarship_id) [unique]
+    (owner_id, scholarship_id, round_key) [unique]
+  }
+  Note: 'TENANT new round means new application. Lifetime round uniqueness survives soft delete; R17.'
+}
+
+Table application_events {
+  owner_id uuid [not null]
+  application_id uuid [not null]
+  sequence bigint [not null]
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  profile_version bigint [not null]
+  from_state application_state
+  to_state application_state [not null]
+  actor_id uuid [not null]
+  source_kind varchar [not null, note: 'STUDENT_REPORT or separately enabled OFFICIAL_REPORT']
+  source_evidence_ref varchar
+  notes_snapshot text
+  correction_of_sequence bigint
+  reason_code varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, application_id, sequence) [pk]
+  }
+  Note: 'TENANT immutable history. Corrections append evidence, never UPDATE; state transition allowlist R17.'
+}
+
+Table application_documents {
+  owner_id uuid [not null]
+  application_id uuid [not null]
+  slot_key varchar [not null]
+  document_id uuid
+  document_version bigint
+  file_asset_id uuid
+  indexes {
+    (owner_id, application_id, slot_key) [pk]
+  }
+  Note: 'TENANT draft manifest only; updates require application PREPARING/READY and expected head.'
+}
+
+Table application_event_documents {
+  owner_id uuid [not null]
+  application_id uuid [not null]
+  event_sequence bigint [not null]
+  slot_key varchar [not null]
+  document_id uuid
+  document_version bigint
+  file_asset_id uuid
+  content_hash varchar [not null]
+  indexes {
+    (owner_id, application_id, event_sequence, slot_key) [pk]
+  }
+  Note: 'TENANT immutable submitted manifest copied atomically into submission event; never follows editable draft.'
+}
+
+Table deadline_events {
+  id uuid [pk]
+  scholarship_id uuid [not null]
+  event_key varchar [not null]
+  current_version bigint
+  row_version bigint [not null]
+  indexes {
+    (scholarship_id, event_key) [unique]
+    (id, scholarship_id) [unique]
+  }
+  Note: 'CATALOG; stable event identity, separate revisions for changed or uncertain dates.'
+}
+
+Table deadline_versions {
+  event_id uuid [not null]
+  version bigint [not null]
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  status varchar [not null, note: 'CONFIRMED, UNKNOWN, CANCELLED; supersession derived from head']
+  source_zone varchar
+  source_text varchar [not null]
+  confirmed_at_utc timestamptz
+  evidence_ref varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (event_id, version) [pk]
+  }
+  Note: 'CATALOG immutable date evidence; unknown/ambiguous source time has no timed reminders R18.'
+}
+
+Table deadline_notifications {
+  owner_id uuid [not null]
+  id uuid [pk]
+  event_id uuid [not null]
+  event_version bigint [not null]
+  offset_minutes integer [not null]
+  due_at timestamptz [not null]
+  state varchar [not null, note: 'SCHEDULED, DELIVERED, CANCELLED']
+  delivered_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, event_id, event_version, offset_minutes) [unique]
+    (state, due_at)
+  }
+  Note: 'TENANT recipient=owner; internal reminders only, recheck confirmed current published event at delivery. R18.'
+}
+
+Table tickets {
+  owner_id uuid [not null]
+  id uuid [pk]
+  state ticket_state [not null]
+  subject varchar [not null]
+  category varchar [not null]
+  priority varchar [not null]
+  head_sequence bigint
+  row_version bigint [not null]
+  created_at timestamptz [not null]
+  resolved_at timestamptz
+  closed_at timestamptz
+  deleted_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+    (state, priority, created_at)
+  }
+  Note: 'TENANT plus assigned support projection. R19; generic admin has no content/library authority.'
+}
+
+Table ticket_assignments {
+  owner_id uuid [not null]
+  id uuid [pk]
+  ticket_id uuid [not null]
+  agent_id uuid [not null]
+  assigned_by uuid [not null]
+  assigned_at timestamptz [not null]
+  ended_at timestamptz
+  indexes {
+    (owner_id, ticket_id, assigned_at)
+  }
+  Note: 'TENANT_RESTRICTED assignment metadata; one active assignee partial unique index R19.'
+}
+
+Table ticket_messages {
+  owner_id uuid [not null]
+  ticket_id uuid [not null]
+  sequence bigint [not null]
+  author_id uuid
+  author_kind varchar [not null]
+  substantive boolean [not null]
+  body text [not null]
+  operation_result_id uuid
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, ticket_id, sequence) [pk]
+  }
+  Note: 'TENANT plus current assignee scoped read. Author permission checked on insert; AI has no account/ledger mutation capability.'
+}
+
+Table ticket_events {
+  owner_id uuid [not null]
+  ticket_id uuid [not null]
+  sequence bigint [not null]
+  from_state ticket_state
+  to_state ticket_state [not null]
+  actor_id uuid
+  actor_kind varchar [not null]
+  reason_code varchar [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, ticket_id, sequence) [pk]
+  }
+  Note: 'TENANT: owner-only RLS; composite owner FKs mandatory. R01-R05 in schema-notes.md.'
+}
+
+Table ticket_attachments {
+  owner_id uuid [not null]
+  id uuid [pk]
+  ticket_id uuid [not null]
+  file_asset_id uuid [not null]
+  attached_by uuid [not null]
+  explicit_share_at timestamptz [not null]
+  share_evidence_hash varchar [not null]
+  revoked_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, ticket_id, file_asset_id)
+    (owner_id, ticket_id, id, file_asset_id) [unique]
+  }
+  Note: 'TENANT explicit immutable object share, no library grant. Only owner can attach; current assignment and audit required per read R19.'
+}
+
+Table ticket_sla_cycles {
+  owner_id uuid [not null]
+  ticket_id uuid [not null]
+  cycle_no integer [not null]
+  human_requested_at timestamptz [not null]
+  calendar_policy_id uuid [not null]
+  priority_policy_id uuid [not null]
+  priority_at_start varchar [not null]
+  target_business_minutes integer [not null]
+  first_human_message_sequence bigint
+  first_human_response_at timestamptz
+  computed_due_at timestamptz [not null]
+  indexes {
+    (owner_id, ticket_id, cycle_no) [pk]
+  }
+  Note: 'TENANT calendar/priority snapshot; AI/automated response never stops first-human SLA. R19; reopen cycle assumption.'
+}
+
+Table ticket_ratings {
+  owner_id uuid [not null]
+  ticket_id uuid [not null]
+  rating integer [not null]
+  first_rated_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  indexes {
+    (owner_id, ticket_id) [pk]
+  }
+  Note: 'TENANT one rating, bounded update window and append-only audit R19; scale missing, not invented.'
+}
+
+Table tenant_audit_events {
+  owner_id uuid [not null]
+  id uuid [pk]
+  actor_id uuid
+  actor_kind varchar [not null]
+  action varchar [not null]
+  resource_kind varchar [not null]
+  resource_id uuid
+  operation_id uuid
+  outcome varchar [not null]
+  reason_code varchar [not null]
+  change_metadata jsonb [not null, note: 'Action-typed allowlisted before/after states, policy/version refs or amounts; never personal bodies']
+  policy_id uuid
+  occurred_at timestamptz [not null]
+  indexes {
+    (owner_id, occurred_at, id)
+    (owner_id, operation_id, occurred_at)
+  }
+  Note: 'TENANT_RESTRICTED append-only metadata, no content. IDs are not authorization capabilities R20/R21.'
+}
+
+Table platform_audit_events {
+  id uuid [pk]
+  actor_id uuid
+  action varchar [not null]
+  resource_kind varchar [not null]
+  resource_ref varchar
+  outcome varchar [not null]
+  reason_code varchar [not null]
+  change_metadata jsonb [not null, note: 'Action-typed allowlisted before/after states, policy/version refs or amounts; never personal bodies']
+  policy_id uuid
+  occurred_at timestamptz [not null]
+  indexes {
+    (occurred_at, id)
+  }
+  Note: 'PLATFORM_RESTRICTED append-only metadata; denied/anonymous requests audit here after rollback; no student body/secret.'
+}
+
+Table tenant_outbox {
+  owner_id uuid [not null]
+  id uuid [pk]
+  event_type varchar [not null]
+  schema_version integer [not null]
+  resource_ref uuid [not null]
+  resource_version bigint [not null]
+  occurred_at timestamptz [not null]
+  published_at timestamptz
+  indexes {
+    (published_at, occurred_at)
+  }
+  Note: 'TENANT metadata-only event; consumer must resolve typed owner-scoped resource and dedupe event ID. R15/R20.'
+}
+
+Table platform_outbox {
+  id uuid [pk]
+  event_type varchar [not null]
+  resource_ref uuid [not null]
+  resource_version bigint [not null]
+  occurred_at timestamptz [not null]
+  published_at timestamptz
+  indexes {
+    (published_at, occurred_at)
+  }
+  Note: 'PLATFORM_RESTRICTED catalog/config metadata only; cannot carry private payloads or authorize private handlers.'
+}
+
+Table auth_factors {
+  owner_id uuid [not null]
+  id uuid [pk]
+  factor_kind varchar [not null]
+  protected_factor_ref varchar [not null]
+  enrolled_at timestamptz [not null]
+  revoked_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+  }
+  Note: 'IDENTITY_PRIVATE tenant key; authentication routines only, no secret read projection. Admin MFA FR-007/NFR-004.'
+}
+
+Table auth_sessions {
+  owner_id uuid [not null]
+  id uuid [pk]
+  session_digest varchar [not null, unique]
+  auth_method varchar [not null]
+  mfa_verified_at timestamptz
+  mfa_factor_id uuid
+  created_at timestamptz [not null]
+  expires_at timestamptz [not null]
+  revoked_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+  }
+  Note: 'IDENTITY_PRIVATE tenant key; protected session projection, never raw cookies; Django mapping decided at implementation. R02/R03.'
+}
+
+Table profile_fact_evidence {
+  owner_id uuid [not null]
+  profile_version bigint [not null]
+  field_key varchar [not null]
+  origin varchar [not null]
+  confirmation_state varchar [not null]
+  source_file_asset_id uuid
+  source_operation_id uuid
+  confirmed_at timestamptz
+  indexes {
+    (owner_id, profile_version, field_key) [pk]
+  }
+  Note: 'TENANT immutable per-field origin/confirmation; trusted snapshots require explicit student review. FR-008/013/014.'
+}
+
+Table source_observations {
+  id uuid [pk]
+  source_id uuid [not null]
+  permission_id uuid [not null]
+  source_url varchar [not null]
+  content_hash varchar [not null]
+  compared_scholarship_id uuid
+  compared_scholarship_version bigint
+  change_summary jsonb [not null]
+  checked_at timestamptz [not null]
+  indexes {
+    (source_id, checked_at, id)
+    (source_id, id) [unique]
+  }
+  Note: 'CATALOG_RESTRICTED immutable monitor/difference evidence, no automatic material update publication. FR-016/019/020.'
+}
+
+Table scholarship_reports {
+  owner_id uuid [not null]
+  id uuid [pk]
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  category varchar [not null]
+  evidence text [not null]
+  state varchar [not null, note: 'OPEN, IN_REVIEW, UPHELD, DISMISSED']
+  row_version bigint [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, id) [unique]
+  }
+  Note: 'TENANT report plus audited moderator case projection; reporter data never public catalog. FR-024/AC-008.'
+}
+
+Table scholarship_report_events {
+  owner_id uuid [not null]
+  report_id uuid [not null]
+  sequence bigint [not null]
+  actor_id uuid [not null]
+  decision varchar [not null]
+  reason_code varchar [not null]
+  moderation_event_id uuid
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, report_id, sequence) [pk]
+  }
+  Note: 'TENANT append-only attributable report decision; cannot publish facts by itself.'
+}
+
+Table scholarship_requirements {
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  requirement_key varchar [not null]
+  kind varchar [not null, note: 'DOCUMENT, FORM, ACTION']
+  description jsonb [not null]
+  mandatory boolean [not null]
+  verification_state varchar [not null]
+  evidence_ref varchar [not null]
+  indexes {
+    (scholarship_id, scholarship_version, requirement_key) [pk]
+  }
+  Note: 'CATALOG_RESTRICTED sealed versioned checklist information; unknown requirements remain unknown. FR-027/044/045.'
+}
+
+Table application_checklist_items {
+  owner_id uuid [not null]
+  application_id uuid [not null]
+  requirement_key varchar [not null]
+  scholarship_id uuid [not null]
+  scholarship_version bigint [not null]
+  state varchar [not null, note: 'MISSING, IN_PROGRESS, COMPLETE']
+  student_confirmed_at timestamptz
+  indexes {
+    (owner_id, application_id, requirement_key) [pk]
+  }
+  Note: 'TENANT version-bound requirement; documentary completion derives from selected approved/accepted artifact, action completion needs owner confirmation.'
+}
+
+Table document_approvals {
+  owner_id uuid [not null]
+  document_id uuid [not null]
+  document_version bigint [not null]
+  content_hash varchar [not null]
+  approved_by uuid [not null]
+  approved_at timestamptz [not null]
+  evidence_hash varchar [not null]
+  indexes {
+    (owner_id, document_id, document_version) [pk]
+  }
+  Note: 'TENANT immutable owner approval of exact version/hash; AI technical validation cannot impersonate student ready/export approval. FR-037/039/040.'
+}
+
+Table notification_preferences {
+  owner_id uuid [not null]
+  category varchar [not null]
+  enabled boolean [not null]
+  row_version bigint [not null]
+  updated_at timestamptz [not null]
+  indexes {
+    (owner_id, category) [pk]
+  }
+  Note: 'TENANT optional in-app category preference; mandatory account/security cannot be suppressed. FR-092.'
+}
+
+Table in_app_notifications {
+  owner_id uuid [not null]
+  id uuid [pk]
+  category varchar [not null]
+  event_id uuid [not null]
+  event_version bigint [not null]
+  destination_kind varchar [not null]
+  scholarship_id uuid
+  application_id uuid
+  document_id uuid
+  ticket_id uuid
+  operation_id uuid
+  credit_entry_id uuid
+  deadline_notification_id uuid
+  scholarship_report_id uuid
+  created_at timestamptz [not null]
+  read_at timestamptz
+  indexes {
+    (owner_id, id) [unique]
+    (owner_id, event_id, event_version, category) [unique]
+    (owner_id, deadline_notification_id) [unique]
+    (owner_id, read_at, created_at)
+  }
+  Note: 'TENANT inbox for source/checklist/document/credit/support/deadline events; exactly one typed target, server-derived authorized destination; no product email/push. FR-089-093.'
+}
+
+Table ticket_sla_events {
+  owner_id uuid [not null]
+  id uuid [pk]
+  ticket_id uuid [not null]
+  cycle_no integer [not null]
+  event_kind varchar [not null, note: 'WARNING, BREACH, ESCALATION']
+  threshold_business_minutes integer [not null]
+  policy_id uuid [not null]
+  created_at timestamptz [not null]
+  indexes {
+    (owner_id, ticket_id, cycle_no, event_kind, threshold_business_minutes) [unique]
+  }
+  Note: 'TENANT immutable SLA warning/breach/escalation evidence, thresholds configured not invented. FR-103/104.'
+}
+
+// All FK deletes RESTRICT. Cyclic head/result references become DEFERRABLE
+// INITIALLY DEFERRED where specified by R22; never deploy DBML export alone.
+
+Ref: auth_identities.owner_id > users.id [delete: restrict, update: restrict]
+Ref: verification_challenges.owner_id > users.id [delete: restrict, update: restrict]
+Ref: role_grants.principal_id > users.id [delete: restrict, update: restrict]
+Ref: role_grants.granted_by > users.id [delete: restrict, update: restrict]
+Ref: profiles.owner_id > users.id [delete: restrict, update: restrict]
+Ref: profile_versions.owner_id > users.id [delete: restrict, update: restrict]
+Ref: profiles.(owner_id, current_version) > profile_versions.(owner_id, version) [delete: restrict, update: restrict]
+Ref: consent_heads.owner_id > users.id [delete: restrict, update: restrict]
+Ref: consent_versions.owner_id > users.id [delete: restrict, update: restrict]
+Ref: consent_heads.(owner_id, current_version) > consent_versions.(owner_id, version) [delete: restrict, update: restrict]
+Ref: account_deletion_requests.owner_id > users.id [delete: restrict, update: restrict]
+Ref: policy_versions.created_by > users.id [delete: restrict, update: restrict]
+Ref: platform_setting_heads.policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: users.adult_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: account_deletion_requests.policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: verification_challenges.(owner_id, deletion_request_id) > account_deletion_requests.(owner_id, id) [delete: restrict, update: restrict]
+Ref: platform_idempotency_requests.actor_id > users.id [delete: restrict, update: restrict]
+Ref: service_prices.policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: processor_approvals.approved_by > users.id [delete: restrict, update: restrict]
+Ref: source_permissions.source_id > scholarship_sources.id [delete: restrict, update: restrict]
+Ref: source_permissions.reviewed_by > users.id [delete: restrict, update: restrict]
+Ref: scholarship_versions.scholarship_id > scholarships.id [delete: restrict, update: restrict]
+Ref: scholarship_versions.created_by > users.id [delete: restrict, update: restrict]
+Ref: scholarships.(id, published_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: scholarship_provenance.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: scholarship_provenance.(source_id, permission_id) > source_permissions.(source_id, id) [delete: restrict, update: restrict]
+Ref: moderation_events.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: moderation_events.actor_id > users.id [delete: restrict, update: restrict]
+Ref: eligibility_criteria.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: saved_opportunities.owner_id > users.id [delete: restrict, update: restrict]
+Ref: saved_opportunities.scholarship_id > scholarships.id [delete: restrict, update: restrict]
+Ref: eligibility_evaluations.owner_id > users.id [delete: restrict, update: restrict]
+Ref: eligibility_evaluations.(owner_id, profile_version) > profile_versions.(owner_id, version) [delete: restrict, update: restrict]
+Ref: eligibility_evaluations.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: eligibility_evaluations.engine_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: eligibility_checks.owner_id > users.id [delete: restrict, update: restrict]
+Ref: eligibility_checks.(owner_id, evaluation_id, scholarship_id, scholarship_version) > eligibility_evaluations.(owner_id, id, scholarship_id, scholarship_version) [delete: restrict, update: restrict]
+Ref: eligibility_checks.(scholarship_id, scholarship_version, criterion_key) > eligibility_criteria.(scholarship_id, scholarship_version, criterion_key) [delete: restrict, update: restrict]
+Ref: idempotency_requests.owner_id > users.id [delete: restrict, update: restrict]
+Ref: operations.owner_id > users.id [delete: restrict, update: restrict]
+Ref: operations.(owner_id, request_id) > idempotency_requests.(owner_id, id) [delete: restrict, update: restrict]
+Ref: idempotency_requests.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operations.(owner_id, profile_version) > profile_versions.(owner_id, version) [delete: restrict, update: restrict]
+Ref: operations.(owner_id, consent_version) > consent_versions.(owner_id, version) [delete: restrict, update: restrict]
+Ref: operations.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: operations.(price_policy_id, service_kind, price_credits) > service_prices.(policy_id, service_kind, credits) [delete: restrict, update: restrict]
+Ref: credit_wallets.owner_id > users.id [delete: restrict, update: restrict]
+Ref: credit_reservations.owner_id > users.id [delete: restrict, update: restrict]
+Ref: credit_reservations.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: credit_adjustments.owner_id > users.id [delete: restrict, update: restrict]
+Ref: credit_adjustments.requested_by > users.id [delete: restrict, update: restrict]
+Ref: credit_adjustments.approved_by > users.id [delete: restrict, update: restrict]
+Ref: credit_entries.owner_id > users.id [delete: restrict, update: restrict]
+Ref: credit_entries.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: credit_entries.(owner_id, adjustment_id) > credit_adjustments.(owner_id, id) [delete: restrict, update: restrict]
+Ref: credit_entries.(owner_id, reverses_entry_id) > credit_entries.(owner_id, id) [delete: restrict, update: restrict]
+Ref: credit_entries.policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: credit_entries.actor_id > users.id [delete: restrict, update: restrict]
+Ref: student_daily_usage.owner_id > users.id [delete: restrict, update: restrict]
+Ref: student_daily_usage.current_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: global_daily_usage.current_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: operations.(owner_id, student_day) > student_daily_usage.(owner_id, local_day) [delete: restrict, update: restrict]
+Ref: operations.global_day > global_daily_usage.local_day [delete: restrict, update: restrict]
+Ref: jobs.owner_id > users.id [delete: restrict, update: restrict]
+Ref: jobs.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ai_calls.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ai_calls.(owner_id, operation_id, job_id) > jobs.(owner_id, operation_id, id) [delete: restrict, update: restrict]
+Ref: ai_calls.processor_approval_id > processor_approvals.id [delete: restrict, update: restrict]
+Ref: provider_budget_windows.current_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: provider_allocations.owner_id > users.id [delete: restrict, update: restrict]
+Ref: provider_allocations.(owner_id, ai_call_id) > ai_calls.(owner_id, id) [delete: restrict, update: restrict]
+Ref: provider_allocations.budget_window_id > provider_budget_windows.id [delete: restrict, update: restrict]
+Ref: file_assets.owner_id > users.id [delete: restrict, update: restrict]
+Ref: file_assets.storage_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: jobs.(owner_id, file_asset_id) > file_assets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: file_scan_results.owner_id > users.id [delete: restrict, update: restrict]
+Ref: file_scan_results.(owner_id, file_asset_id, object_version, sha256) > file_assets.(owner_id, id, object_version, sha256) [delete: restrict, update: restrict]
+Ref: storage_usage.owner_id > users.id [delete: restrict, update: restrict]
+Ref: storage_usage.current_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: global_storage_usage.current_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: documents.owner_id > users.id [delete: restrict, update: restrict]
+Ref: document_versions.owner_id > users.id [delete: restrict, update: restrict]
+Ref: document_versions.(owner_id, document_id) > documents.(owner_id, id) [delete: restrict, update: restrict]
+Ref: documents.(owner_id, variant_of_document_id) > documents.(owner_id, id) [delete: restrict, update: restrict]
+Ref: documents.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: document_versions.(owner_id, document_id, restored_from_version) > document_versions.(owner_id, document_id, version) [delete: restrict, update: restrict]
+Ref: document_versions.(owner_id, source_operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: documents.(owner_id, id, current_version) > document_versions.(owner_id, document_id, version) [delete: restrict, update: restrict]
+Ref: document_exports.owner_id > users.id [delete: restrict, update: restrict]
+Ref: document_exports.(owner_id, document_id, document_version) > document_versions.(owner_id, document_id, version) [delete: restrict, update: restrict]
+Ref: document_exports.(owner_id, file_asset_id) > file_assets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operation_inputs.owner_id > users.id [delete: restrict, update: restrict]
+Ref: operation_inputs.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operation_inputs.(owner_id, file_asset_id) > file_assets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operation_results.owner_id > users.id [delete: restrict, update: restrict]
+Ref: operation_results.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operation_results.(owner_id, operation_id, ai_call_id) > ai_calls.(owner_id, operation_id, id) [delete: restrict, update: restrict]
+Ref: operation_results.(owner_id, operation_id, document_id, document_version) > document_versions.(owner_id, source_operation_id, document_id, version) [delete: restrict, update: restrict]
+Ref: operation_results.(owner_id, eligibility_evaluation_id) > eligibility_evaluations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operation_results.validation_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: operation_finalizations.owner_id > users.id [delete: restrict, update: restrict]
+Ref: operation_finalizations.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operation_finalizations.(owner_id, operation_id, result_id) > operation_results.(owner_id, operation_id, id) [delete: restrict, update: restrict]
+Ref: operation_finalizations.(owner_id, operation_id, debit_entry_id) > credit_entries.(owner_id, operation_id, id) [delete: restrict, update: restrict]
+Ref: applications.owner_id > users.id [delete: restrict, update: restrict]
+Ref: applications.scholarship_id > scholarships.id [delete: restrict, update: restrict]
+Ref: application_events.owner_id > users.id [delete: restrict, update: restrict]
+Ref: application_events.(owner_id, application_id, scholarship_id) > applications.(owner_id, id, scholarship_id) [delete: restrict, update: restrict]
+Ref: application_events.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: application_events.(owner_id, profile_version) > profile_versions.(owner_id, version) [delete: restrict, update: restrict]
+Ref: application_events.actor_id > users.id [delete: restrict, update: restrict]
+Ref: application_events.(owner_id, application_id, correction_of_sequence) > application_events.(owner_id, application_id, sequence) [delete: restrict, update: restrict]
+Ref: applications.(owner_id, id, head_sequence) > application_events.(owner_id, application_id, sequence) [delete: restrict, update: restrict]
+Ref: applications.(owner_id, id, submitted_sequence) > application_events.(owner_id, application_id, sequence) [delete: restrict, update: restrict]
+Ref: application_documents.owner_id > users.id [delete: restrict, update: restrict]
+Ref: application_documents.(owner_id, application_id) > applications.(owner_id, id) [delete: restrict, update: restrict]
+Ref: application_documents.(owner_id, document_id, document_version) > document_versions.(owner_id, document_id, version) [delete: restrict, update: restrict]
+Ref: application_documents.(owner_id, file_asset_id) > file_assets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: application_event_documents.owner_id > users.id [delete: restrict, update: restrict]
+Ref: application_event_documents.(owner_id, application_id, event_sequence) > application_events.(owner_id, application_id, sequence) [delete: restrict, update: restrict]
+Ref: application_event_documents.(owner_id, document_id, document_version) > document_versions.(owner_id, document_id, version) [delete: restrict, update: restrict]
+Ref: application_event_documents.(owner_id, file_asset_id) > file_assets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: deadline_events.scholarship_id > scholarships.id [delete: restrict, update: restrict]
+Ref: deadline_versions.(event_id, scholarship_id) > deadline_events.(id, scholarship_id) [delete: restrict, update: restrict]
+Ref: deadline_versions.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: deadline_events.(id, current_version) > deadline_versions.(event_id, version) [delete: restrict, update: restrict]
+Ref: deadline_notifications.owner_id > users.id [delete: restrict, update: restrict]
+Ref: deadline_notifications.(event_id, event_version) > deadline_versions.(event_id, version) [delete: restrict, update: restrict]
+Ref: jobs.(owner_id, notification_id) > deadline_notifications.(owner_id, id) [delete: restrict, update: restrict]
+Ref: tickets.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_assignments.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_assignments.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_assignments.agent_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_assignments.assigned_by > users.id [delete: restrict, update: restrict]
+Ref: ticket_messages.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_messages.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_messages.author_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_messages.(owner_id, operation_result_id) > operation_results.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_events.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_events.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_events.actor_id > users.id [delete: restrict, update: restrict]
+Ref: tickets.(owner_id, id, head_sequence) > ticket_events.(owner_id, ticket_id, sequence) [delete: restrict, update: restrict]
+Ref: ticket_attachments.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_attachments.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_attachments.(owner_id, file_asset_id) > file_assets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_attachments.attached_by > users.id [delete: restrict, update: restrict]
+Ref: operations.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: operation_inputs.(owner_id, operation_id, ticket_id) > operations.(owner_id, id, ticket_id) [delete: restrict, update: restrict]
+Ref: operation_inputs.(owner_id, ticket_id, ticket_attachment_id, file_asset_id) > ticket_attachments.(owner_id, ticket_id, id, file_asset_id) [delete: restrict, update: restrict]
+Ref: ticket_sla_cycles.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_sla_cycles.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_sla_cycles.(owner_id, ticket_id, first_human_message_sequence) > ticket_messages.(owner_id, ticket_id, sequence) [delete: restrict, update: restrict]
+Ref: ticket_sla_cycles.calendar_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: ticket_sla_cycles.priority_policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: ticket_ratings.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_ratings.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: tenant_audit_events.owner_id > users.id [delete: restrict, update: restrict]
+Ref: tenant_audit_events.actor_id > users.id [delete: restrict, update: restrict]
+Ref: tenant_audit_events.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: tenant_audit_events.policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: platform_audit_events.actor_id > users.id [delete: restrict, update: restrict]
+Ref: platform_audit_events.policy_id > policy_versions.id [delete: restrict, update: restrict]
+Ref: tenant_outbox.owner_id > users.id [delete: restrict, update: restrict]
+Ref: auth_factors.owner_id > users.id [delete: restrict, update: restrict]
+Ref: auth_sessions.owner_id > users.id [delete: restrict, update: restrict]
+Ref: profile_fact_evidence.owner_id > users.id [delete: restrict, update: restrict]
+Ref: auth_sessions.(owner_id, mfa_factor_id) > auth_factors.(owner_id, id) [delete: restrict, update: restrict]
+Ref: profile_fact_evidence.(owner_id, profile_version) > profile_versions.(owner_id, version) [delete: restrict, update: restrict]
+Ref: profile_fact_evidence.(owner_id, source_file_asset_id) > file_assets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: profile_fact_evidence.(owner_id, source_operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: source_observations.(source_id, permission_id) > source_permissions.(source_id, id) [delete: restrict, update: restrict]
+Ref: source_observations.(compared_scholarship_id, compared_scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: platform_jobs.source_id > scholarship_sources.id [delete: restrict, update: restrict]
+Ref: platform_jobs.(source_id, observation_id) > source_observations.(source_id, id) [delete: restrict, update: restrict]
+Ref: scholarship_reports.owner_id > users.id [delete: restrict, update: restrict]
+Ref: scholarship_reports.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: scholarship_report_events.owner_id > users.id [delete: restrict, update: restrict]
+Ref: scholarship_report_events.(owner_id, report_id) > scholarship_reports.(owner_id, id) [delete: restrict, update: restrict]
+Ref: scholarship_report_events.actor_id > users.id [delete: restrict, update: restrict]
+Ref: scholarship_report_events.moderation_event_id > moderation_events.id [delete: restrict, update: restrict]
+Ref: scholarship_requirements.(scholarship_id, scholarship_version) > scholarship_versions.(scholarship_id, version) [delete: restrict, update: restrict]
+Ref: application_checklist_items.owner_id > users.id [delete: restrict, update: restrict]
+Ref: application_checklist_items.(owner_id, application_id, scholarship_id) > applications.(owner_id, id, scholarship_id) [delete: restrict, update: restrict]
+Ref: application_checklist_items.(scholarship_id, scholarship_version, requirement_key) > scholarship_requirements.(scholarship_id, scholarship_version, requirement_key) [delete: restrict, update: restrict]
+Ref: application_documents.(owner_id, application_id, slot_key) > application_checklist_items.(owner_id, application_id, requirement_key) [delete: restrict, update: restrict]
+Ref: document_approvals.owner_id > users.id [delete: restrict, update: restrict]
+Ref: document_approvals.(owner_id, document_id, document_version) > document_versions.(owner_id, document_id, version) [delete: restrict, update: restrict]
+Ref: document_approvals.approved_by > users.id [delete: restrict, update: restrict]
+Ref: notification_preferences.owner_id > users.id [delete: restrict, update: restrict]
+Ref: in_app_notifications.owner_id > users.id [delete: restrict, update: restrict]
+Ref: in_app_notifications.scholarship_id > scholarships.id [delete: restrict, update: restrict]
+Ref: in_app_notifications.(owner_id, application_id) > applications.(owner_id, id) [delete: restrict, update: restrict]
+Ref: in_app_notifications.(owner_id, document_id) > documents.(owner_id, id) [delete: restrict, update: restrict]
+Ref: in_app_notifications.(owner_id, ticket_id) > tickets.(owner_id, id) [delete: restrict, update: restrict]
+Ref: in_app_notifications.(owner_id, operation_id) > operations.(owner_id, id) [delete: restrict, update: restrict]
+Ref: in_app_notifications.(owner_id, credit_entry_id) > credit_entries.(owner_id, id) [delete: restrict, update: restrict]
+Ref: in_app_notifications.(owner_id, deadline_notification_id) > deadline_notifications.(owner_id, id) [delete: restrict, update: restrict]
+Ref: in_app_notifications.(owner_id, scholarship_report_id) > scholarship_reports.(owner_id, id) [delete: restrict, update: restrict]
+Ref: ticket_sla_events.owner_id > users.id [delete: restrict, update: restrict]
+Ref: ticket_sla_events.(owner_id, ticket_id, cycle_no) > ticket_sla_cycles.(owner_id, ticket_id, cycle_no) [delete: restrict, update: restrict]
+Ref: ticket_sla_events.policy_id > policy_versions.id [delete: restrict, update: restrict]

@@ -1,6 +1,6 @@
 # ADR 0007 — Metadata observability and append-only audit
 
-Status: PROPOSED / ASSUMPTION. Traces A; D OQ-007/023; P §2.8/§4. Context: operation recovery and denied access need evidence without collecting student content.
+Status: DOCUMENTED WORKING DESIGN / ASSUMPTION; reconciled PRD/Phase01/UD-001/002. Traces A; D OQ-007/023; P §2.8/§4. Context: operation recovery and denied access need evidence without collecting student content.
 
 Decision: correlation and operation IDs across API/worker/provider attempt; allowlisted metadata logs/metrics and transactional append-only audit. Commit mutation and its audit/outbox together, or neither; denied requests persist separate metadata audit even when business transaction rolls back. Admin private-library denial must produce 403 and audit. If audit cannot persist, deny sensitive access/mutation and alert via redacted operational signal; do not claim auditable success.
 

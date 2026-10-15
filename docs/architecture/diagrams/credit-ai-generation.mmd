@@ -5,7 +5,9 @@ sequenceDiagram
   participant worker as Independent worker
   participant provider as Eligible free processor
   participant storage as Private result storage
-  student->>api: POST generation with CSRF, snapshots and idempotency key
+  student->>api: Request server quote for immutable input manifest
+  api-->>student: Exact Credits and signed expiring quote
+  student->>api: Confirm quote, language and snapshots with CSRF and idempotency key
   api->>db: Authorize owner, current consent and policy, lock key and limits
   alt Same key and body already committed
     db-->>api: Existing owned operation
@@ -46,3 +48,5 @@ sequenceDiagram
   student->>api: GET owned operation
   api->>db: Reauthorize owner and lifecycle
   api-->>student: State and accepted result reference only after settlement
+  student->>api: Review draft and approve exact document version
+  api->>db: Owned hash-bound student approval, separate from AI settlement

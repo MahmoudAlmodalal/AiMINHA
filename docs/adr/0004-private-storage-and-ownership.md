@@ -1,6 +1,6 @@
 # ADR 0004 — Private object storage and ownership
 
-Status: PROPOSED / ASSUMPTION. Traces A; D §أ 6/OQ-007/013 and §د. Context: uploads are untrusted and staff role must not expose student libraries.
+Status: DOCUMENTED WORKING DESIGN / ASSUMPTION; reconciled PRD/Phase01/UD-001/002. Traces A; D §أ 6/OQ-007/013 and §د. Context: uploads are untrusted and staff role must not expose student libraries.
 
 Decision: private quarantine and accepted namespaces; immutable object version/hash bind scan to accepted bytes. Server controls keys, capacity reservations and owner relation. Bounded short upload capability; current scanner and quotas required even to initiate. Completion verifies bytes then queues scan; library accepts only exact clean validated version. Scanner outage/rejection never exposes file to converter/AI/preview. Detailed flow in `../architecture/privacy-boundaries.md`.
 

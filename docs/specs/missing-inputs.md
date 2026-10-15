@@ -1,22 +1,23 @@
-# Phase 00 missing inputs and gates
+# Current decisions and external gate register
 
-Status: **BLOCKED: SOURCE_INCOMPLETE**. Discovery artifacts exist; requirements coverage does not.
+2026-10-15. **Discovery/requirements design PASS; real-user release BLOCKED.** PRD and provider strategy are present. This register separates unexecuted external proof from completed early documentation.
 
-| Priority | Missing input / evidence | Trace | Required next action |
+| Gate | Missing decision / evidence | Enforcement until resolved | Source |
 |---|---|---|---|
-| P0 | Actual approved PRD, referenced v3.0.0, with approval/version context | AGENTS.md §Source hierarchy; S2 header/OQ-024; S3 baseline | Product owner supplies `docs/source/PRD.md` and identifies authoritative version. No substitute fabricated PRD. |
-| P0 | Baseline reconciliation against PRD | S2 §§أ–ج; S3 §5 | Once supplied, compare decisions/defaults and resolve conflicts explicitly before full phase 01 baseline. |
-| EXTERNAL_GATE | Provider/model/data-class/region approvals, retention/no-training controls and disclosed consent changes | S2 OQ-004/005; S3 §§2,5 | Obtain individual security/contract/legal evidence before private-data AI. Keep it disabled meanwhile. |
-| EXTERNAL_GATE | Hosting/commercial-use eligibility and actual $0 resource limits | S2 §هـ/§ز; roadmap release gates | Validate current terms and measured capacity; no provisioning or deployment in phase 00. |
-| EXTERNAL_GATE | Privacy, terms, jurisdiction, deletion/restore and retention review | S2 OQ-005/006/020/023 | Obtain approved policies for actual users and processors. Defaults do not close legal gates. |
-| EXTERNAL_GATE | Scholarship-source permissions and initial Chrome-site list | S2 OQ-003/015 | Record source/site permissions before ingestion or extension testing against those sites. |
-| EXTERNAL_GATE | Working scanner, backup/restore drill, access/security/credit/extension and bilingual quality evidence | S2 OQ-013/018/021 and §§و–ز | Validate later against running code; no current proof exists. |
-| Deferred paid release | Payment provider, currency, recipient, refund/dispute/settlement procedures | S2 OQ-001/002 and §د | Leave public payment/checkout disabled in Beta; settle before paid activation. |
+| G-SIGNOFF | Formal general-release PRD revision signature and original interview provenance not independently supplied | Work from attached baseline; do not claim historical signatures or general-release approval | PRD header/§27; UD-002 |
+| G-LEGAL | Actual jurisdictions, privacy/terms, retention minima/maxima, deletion/backup/processor erasure basis and exception durations | No real-user activation absent approved policy; Admin recovery edits must remain within that legal envelope | PRD FR-113–121/OQ-005/006; D §ز; UD-001 |
+| G-PROVIDER | Per-provider/model/purpose/data-class/region contracts, no-training/retention and quality, free-only account, conservative usage/reset evidence | Private AI off, no private fallback to Gemini unpaid/OpenRouter free; unknown meter denies send, no paid upgrade | D §أ 5/OQ-004; P §§1–6 |
+| G-SOURCE | Each source's permitted fetch/publication and actual official-source list | No ingest/publish without current source evidence and human moderation | FR-015–024; D §أ 2/3 |
+| G-SCANNER | Working exact-byte scanner, supported types/bounds/private immutable storage/quota enforcement/region | Upload and conversion disabled; manual entry available | FR-011/050; D OQ-013 |
+| G-HOSTING | Current account terms/commercial use, permitted $0 API/worker/DB/storage, measured quota | No deployment or paid resource; independent durable worker required | D §هـ/§ز; deployment-boundaries.md |
+| G-RESTORE | Independently restored backup and deletion/revocation replay, real RPO/RTO and retention expiry | No real-user release; no fabricated backup safety | FR-120; NFR-021 |
+| G-PAID | Payment rail/recipient/currency/funds verification/reference normalization/refund-dispute policy | F-10 disabled in Beta; remains required before paid/general Advanced MVP | FR-080–088; D §أ 1/OQ-001/002 |
+| G-PROFILE | Exact required stage fields, known GPA/proof scales, leap-day/legal age edge | Preserve Unknown, manual confirmed facts; deny ambiguous activation/mandatory eligibility rather than guess | FR-004/009/028/029; OQ-011/012 |
+| G-TICKET | Rating scale/eligibility, warning thresholds/routes and staffing evidence | Undefined rating/escalation automation off; manual human queue continues; targets not promises | FR-100–105; D OQ-008–010 |
+| G-EXT | Permitted portal/browser matrix, exchange-origin review, exact supported fields/test thresholds | Extension off until allowed-site/session review; no OTP/password/submit | FR-059–068; D OQ-015 |
+| G-STATUS | Terminal/backward correction and future official-source precedence | Preserve both origins/history; reject unlisted transitions, no official integration enabled | FR-053/055/058; D OQ-014 |
+| G-MEASURE | Load/quality/uptime/bilingual/semantic-search/accessibility metrics and pilot evidence | Numerical defaults remain proposals, no measured service guarantees | NFR-013–028; D OQ-018/021/023 |
 
-## Repository findings, not phase 00 defects
+UD-001 resolves who controls the recovery period: Admin. [ADR 0008](../adr/0008-configurable-recovery-period.md) gives the proposed exact, versioned calendar calculation and immutable per-request deadline. No stale “PRD missing” blocker remains. Externally gated features have explicit unavailable/manual paths rather than invented approvals.
 
-No apps, APIs, dependencies/locks, tests, CI, migrations, environment examples, workers, extension code, storage configuration, or infrastructure exist. Bootstrap is phase 05, not authorized now. Exact package versions/package manager, supported runtime versions, provider model IDs/retry limits and deployment platform remain unspecified or unvalidated; do not invent them.
-
-## Handoff
-
-Provide the approved PRD, update source inventory, and reconcile source authority. Phase 01 (`prompts/01-requirements-and-backlog.md`) then derives a traceable feature matrix, business rules and backlog only under separate phase authorization. Real-user processing and release remain subject to external gates even after source completeness is resolved.
+No application, test harness, CI, migration, deployed worker/scanner/backup or infrastructure exists. Phases 04–17 remain future work. Passing phases 00–03 means their documentation/design gates pass; it does not pass any runtime, legal, provider, payment or deployment gate above.

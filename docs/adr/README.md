@@ -1,6 +1,6 @@
 # Phase 02 architecture decision records
 
-All ADRs are **PROPOSED / ASSUMPTION**, pending approved PRD/phase 01 reconciliation and platform/security/legal validation. Sources A/D/P/U02 are defined in `../architecture/system-overview.md`. Decisions guide bounded documented flows; no FR or implementation approval is invented.
+ADRs are **DOCUMENTED WORKING DESIGN / ASSUMPTION**, reconciled to the supplied PRD/Phase01/UD-001/002; runtime/platform/security/legal validation and release signoff remain independent gates. Sources A/D/P/U02 are defined in `../architecture/system-overview.md`. Decisions guide bounded documented flows; no FR or implementation approval is invented.
 
 | ADR | Decision |
 |---|---|
@@ -11,3 +11,4 @@ All ADRs are **PROPOSED / ASSUMPTION**, pending approved PRD/phase 01 reconcilia
 | [0005](0005-deployment-separation.md) | Separate frontend/API/worker; hosting eligibility gate |
 | [0006](0006-feature-flags-and-cost-gates.md) | Deny-first server flags plus explicit approval and budget policy |
 | [0007](0007-observability-and-audit.md) | Redacted metadata telemetry and atomic append-only audit |
+| [0008](0008-configurable-recovery-period.md) | Admin-configurable calendar recovery, immutable per-request deadline and prospective audited policy changes |

@@ -1,34 +1,27 @@
-# Phase 00 current repository map
+# Current repository map — 2026-10-15
 
-Local checkout: `/workspace/AiMINHA`. Origin: `https://github.com/MahmoudAlmodalal/AiMINHA.git`. Branch: `main`, tracking `origin/main`. Inspected HEAD: `de578430c59531bac01586ae632708e418cdf4d8` (`first commit`), containing only the original README. Phase 00 changes are local and uncommitted; no remote re-fetch was needed for document discovery.
+Checkout `/workspace/AiMINHA`, user-confirmed remote `MahmoudAlmodalal/AiMINHA`, branch `main`. HEAD `54d98904de4306fd3486616a48a26ae9f3188f55`; current documentation edits are uncommitted. Existing work from the same session is preserved; no push/deployment/provisioning.
 
 ```text
 AiMINHA/
-├── AGENTS.md                         imported rules
-├── README.md                         build-pack README replaces title
-├── MASTER_PLAYBOOK_AR.md              packaged playbook
-├── docs/
-│   ├── source/
-│   │   ├── MinhaAI_PRD_Decision_Resolution_AR.md
-│   │   ├── ai-provider-strategy.md
-│   │   └── MinhaAI_AI_Agent_Master_Playbook_AR.md
-│   └── specs/
-│       ├── source-inventory.md
-│       ├── missing-inputs.md
-│       ├── source-authority.md
-│       ├── requirements-conflicts.md
-│       └── current-repo-map.md
-├── prompts/                          18 imported prompts, 00–17
-├── tasks/
-│   ├── implementation-plan.md        phase 00 status recorded
-│   └── phase-reports/00.md            updated discovery report
-└── templates/                        task and phase-report templates
+├── AGENTS.md, README.md              original workflow/security rules
+├── docs/source/                     original PRD, decisions, provider strategy, playbook
+│   └── 2026-10-15-owner-decisions.md additive latest session direction
+├── docs/specs/                      source inventory/authority/gates/conflicts/map
+│   ├── feature-matrix.md            all 125 FR + 28 NFR
+│   ├── business-rules.md            all 54 BR + OQ dispositions
+│   └── acceptance-scenarios.md      source AC + explicit requirement test paths
+├── docs/architecture/               C4/sequences, APIs/modules/privacy/jobs/deployment
+│   ├── openapi.json                 versioned machine-readable API draft
+│   └── erd.dbml, schema/state/migration design
+├── docs/adr/                        architecture decisions including recovery policy
+├── prompts/                        18 original prompts 00–17
+├── tasks/implementation-plan.md     current phase gates and release restrictions
+├── tasks/product-backlog.md         epics/original stories/dependencies/acceptance
+├── tasks/phase-reports/00..03.md    bounded completion and actual verification
+└── templates/                      supplied task/report formats
 ```
 
-`docs/source/PRD.md` is absent. No `apps/`, `packages/`, `tests/`, `infra/`, `.github/`, dependency manifests/locks, `.env` examples, application entry points, migrations or API contracts exist. No runtime/toolchain compatibility, test health or deployed system can be asserted.
+Observed absence: `apps/`, `packages/`, `tests/`, `infra/`, application entry points, runtime dependency manifests/locks, Django migrations, CI and `.env` examples. Files under `/workspace/scratch/` are validation tools only, not application scaffolding. Repository documentation is not a runnable product. Source files that the PRD references but the user did not supply are explicitly missing, never fabricated.
 
-## Provisional scaffold plan — not implemented
-
-Trace: AGENTS.md §Stack; S2 §هـ; master playbook proposed repository layout; roadmap phases 01–05.
-
-After the approved PRD is supplied, phase 01 derives scope, phases 02–03 establish architecture/contracts/data ownership, and phase 04 establishes UX. Only phase 05 creates `apps/web`, `apps/api`, `apps/worker`, `apps/extension` and justified contracts/local infrastructure. Package-manager choices, dependency versions and infrastructure provider selections must be made there with evidence. This plan does not create app directories, install packages, or enable any private-data/paid workflow.
+After the now documented scope/architecture/data contracts, separately authorized Phase 04 produces UX. Phase 05 creates the monorepo/CI/local runtime; later vertical slices implement the backlog and required tests. No bootstrap or runtime compatibility claim is made by this map.

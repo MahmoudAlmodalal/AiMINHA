@@ -1,6 +1,6 @@
 # ADR 0005 — Separate frontend, API and worker runtime
 
-Status: PROPOSED / ASSUMPTION; hosting EXTERNAL_GATE. Traces U02; D §هـ/§ز; A Stack. Context: function support is not continuous worker support or commercial-use approval.
+Status: DOCUMENTED WORKING DESIGN / ASSUMPTION; hosting EXTERNAL_GATE. Traces U02; D §هـ/§ز; A Stack. Context: function support is not continuous worker support or commercial-use approval.
 
 Decision: Next.js web, Django HTTP API, independent recoverable worker, durable PostgreSQL/private storage, one trusted browser origin. Same domain codebase, compatible release versions; no microservice split. AI/scanning/reconciliation are queued and never depend on frontend/serverless request lifetime. Deploy environment and secrets separately; no frontend DB/provider key.
 

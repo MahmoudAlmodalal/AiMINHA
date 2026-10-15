@@ -1,6 +1,6 @@
 # ADR 0006 — Server feature flags with approval and budget gates
 
-Status: PROPOSED / ASSUMPTION. Traces D §أ 1/5/7, §ب/OQ-004/026; P §4; A. Context: flags cannot be legal or security approval and free fallback cannot create surprise cost.
+Status: DOCUMENTED WORKING DESIGN / ASSUMPTION; reconciled PRD/Phase01/UD-001/002. Traces D §أ 1/5/7, §ب/OQ-004/026; P §4; A. Context: flags cannot be legal or security approval and free fallback cannot create surprise cost.
 
 Decision: versioned server policy, deny by default, applied at admission and again before external send/finalization. Effective enablement = approved release scope AND flag AND actor permission AND current consent/provider/model/data-class/region approval AND free-only capability/budget AND dependencies healthy. Unknown values/config outage deny affected feature. UI receives capability summaries, never secrets/authority.
 

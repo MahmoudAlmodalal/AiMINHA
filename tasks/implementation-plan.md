@@ -1,35 +1,37 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. Initial status: TODO, except source completeness is BLOCKED until actual PRD and AI strategy are present.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase documentation/design gate passed with the reported checks, not runtime, external approval or launch readiness. Phases04–17 remain TODO; implementation backlog items remain TODO.
 
-| ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate |
-|---|---|---|---|---|
-| 00 | Repository discovery | Repo + uploaded decision log | Source inventory, missing inputs, scope risk report | Source status explicit; no fabricated requirements |
-| 01 | Requirements decomposition | 00, authoritative PRD | Versioned feature matrix, FR acceptance scenarios, release scope | Every in-scope feature traceable, conflicts flagged |
-| 02 | Architecture & contracts | 01 | ADRs, module map, APIs/jobs/permissions plans | Modularity, trust boundaries and deployment risks reviewed |
-| 03 | Domain and data model | 02 | DBML/ERD, migrations plan, state machines | Ownership, uniqueness, idempotency & history modeled |
-| 04 | UX/UI specification | 01–03 | Sitemap, wireframes, tokens, RTL/LTR flows | UI states for loading/error/disabled/consent |
-| 05 | Workspace/bootstrap | 02–04 | Monorepo scaffolding, local Docker, CI skeleton | Bootable app/API, CI/lint checks, no secrets |
-| 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests |
-| 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling |
-| 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI |
-| 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant |
-| 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed |
-| 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only |
-| 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts |
-| 13 | Support & SLA | 06, 10 | Ticket support, SLA engine, assigned attachments | No private library access, hours/priority tests |
-| 14 | Chrome extension | 06, 12 | MV3 review-only assisted autofill | No OTP/password access, no auto-submit |
-| 15 | Admin & operations UI | 07–14 | Moderation, configurable limits, audit, flags | Admin privilege boundaries audited |
-| 16 | Integrated testing/security | 06–15 | E2E, abuse cases, load tests, release report | Security gates and target metrics recorded |
-| 17 | Deployment & go/no-go | 16 + external gates | Infra plan, rollback, runbooks, decision | Explicit legal/provider/source/hosting signoff |
+| ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
+|---|---|---|---|---|---|
+| 00 | Repository discovery | Repo + uploaded decision log | Source inventory, missing inputs, scope risk report | Source status explicit; no fabricated requirements | PASS |
+| 01 | Requirements decomposition | 00, authoritative PRD | Versioned feature matrix, FR acceptance scenarios, release scope | Every in-scope feature traceable, conflicts flagged | PASS |
+| 02 | Architecture & contracts | 01 | ADRs, module map, APIs/jobs/permissions plans | Modularity, trust boundaries and deployment risks reviewed | PASS |
+| 03 | Domain and data model | 02 | DBML/ERD, migrations plan, state machines | Ownership, uniqueness, idempotency & history modeled | PASS |
+| 04 | UX/UI specification | 01–03 | Sitemap, wireframes, tokens, RTL/LTR flows | UI states for loading/error/disabled/consent | TODO |
+| 05 | Workspace/bootstrap | 02–04 | Monorepo scaffolding, local Docker, CI skeleton | Bootable app/API, CI/lint checks, no secrets | TODO |
+| 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests | TODO |
+| 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | TODO |
+| 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | TODO |
+| 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | TODO |
+| 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | TODO |
+| 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | TODO |
+| 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts | TODO |
+| 13 | Support & SLA | 06, 10 | Ticket support, SLA engine, assigned attachments | No private library access, hours/priority tests | TODO |
+| 14 | Chrome extension | 06, 12 | MV3 review-only assisted autofill | No OTP/password access, no auto-submit | TODO |
+| 15 | Admin & operations UI | 07–14 | Moderation, configurable limits, audit, flags | Admin privilege boundaries audited | TODO |
+| 16 | Integrated testing/security | 06–15 | E2E, abuse cases, load tests, release report | Security gates and target metrics recorded | TODO |
+| 17 | Deployment & go/no-go | 16 + external gates | Infra plan, rollback, runbooks, decision | Explicit legal/provider/source/hosting signoff | TODO |
 
-## Current execution state — 2026-10-14
+## Current execution state — 2026-10-15
 
-- **00: BLOCKED — SOURCE_INCOMPLETE.** Named discovery deliverables and repository map produced; inventory gate (explicit source status, no fabricated requirements) satisfied. Full completion is withheld because `docs/source/PRD.md` is missing. Provider strategy is present from an earlier user attachment. See `phase-reports/00.md`.
-- Source completeness: **BLOCKED** pending actual approved PRD and baseline reconciliation.
-- Phase 01 remains **TODO**, not executed; it cannot establish its complete baseline without the PRD. Phases 03–17 remain **TODO**, not executed.
-- **02: BLOCKED — SOURCE_INCOMPLETE / PHASE_01_MISSING.** Explicit user-authorized architecture-only run produced provisional system/API/module/privacy/job/deployment contracts, six Mermaid diagrams and seven ADRs. OpenAPI and syntax/artifact checks pass; browser rendering was blocked by environment policy. Missing PRD and phase 01 baseline prevent full acceptance. See `phase-reports/02.md`.
-- Phase 00 performed no bootstrap, dependency installation, commit, push, deployment, or provisioning in its discovery run; a later separately authorized turn committed/pushed its documentation. Phase 02 performs documentation only, with validation tools installed outside the repository; no application dependencies, commit, push, deployment or provisioning.
+- **00: PASS — SOURCE_INVENTORY_COMPLETE.** Actual PRD/decision/provider sources present, byte-preserved; owner/default/assumption/external evidence separated, current repo/map/gates updated. See [report00](phase-reports/00.md).
+- **01: PASS — TRACEABILITY_COMPLETE.** 125 FR +28 NFR individual matrix rows, 54 BR acceptance paths, 26 OQ dispositions, 41 source AC/153 named requirement scenarios, 19 original stories/15 dependency-checked epics. All implementation stories TODO. See [report01](phase-reports/01.md).
+- **02: PASS — ARCHITECTURE_CONTRACTS_COMPLETE.** Modular/trust/deployment/job domains, six syntax-checked Mermaid sources, eight documented ADRs, 98 API paths/109 HTTP operations/127 schemas with current ownership/CSRF/quote/MFA/PKCE/idempotency/policy contracts. See [report02](phase-reports/02.md).
+- **03: PASS — DATA_DESIGN_COMPLETE.** 77 tables/53 owner-scoped tables/201 RESTRICT unique-target/type-compatible FKs; five billing/six support states, immutable snapshots/history, once-only grant/settlement/cancellation and Admin-configurable per-request recovery snapshot. DBML/PostgreSQL syntax/structural checks pass; runtime triggers/RLS/concurrency/migrations NOT RUN. See [report03](phase-reports/03.md).
+- Latest owner [UD-001/002](../docs/source/2026-10-15-owner-decisions.md) authorizes early completion and Admin period control. Existing source files are unchanged. A policy edit is prospective and never moves an already confirmed deletion deadline; default30/calendar/Asia-Hebron is an explicit engineering interpretation of the PRD, not a permanent720h rule or legal approval.
+- **Release status: BLOCKED — EXTERNAL_GATES / IMPLEMENTATION_NOT_RUN.** Formal historical general-release signature/original interview provenance, actual legal/provider/source/site/hosting/scanner/backup/free-quota/quality evidence remain independent. No stale PRD-missing/Phase01-unexecuted blocker is current; earlier blocked reports were superseded by this authorized re-evaluation.
+- **04–17: TODO**, not executed. No UX/bootstrap/app implementation, staging/commit/push/deployment or paid resource in this completion. Validation packages/helpers are scratch-only. Browser diagram rendering NOT RUN; syntax only. Exact commands/skips in each report.
 
 ## Release gates that code cannot waive
 
