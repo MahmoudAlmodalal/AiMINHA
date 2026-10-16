@@ -12,3 +12,7 @@ ADRs are **DOCUMENTED WORKING DESIGN / ASSUMPTION**, reconciled to the supplied 
 | [0006](0006-feature-flags-and-cost-gates.md) | Deny-first server flags plus explicit approval and budget policy |
 | [0007](0007-observability-and-audit.md) | Redacted metadata telemetry and atomic append-only audit |
 | [0008](0008-configurable-recovery-period.md) | Admin-configurable calendar recovery, immutable per-request deadline and prospective audited policy changes |
+
+## Phase 05 bootstrap decision
+
+[0009 — implemented runtime schema](0009-bootstrap-runtime-contract.md) records the owner-confirmed runtime subset and architecture compatibility checks. Prior architecture decisions remain design guidance; this phase implements only the bootstrap surface.

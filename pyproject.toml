@@ -1,0 +1,26 @@
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["apps/api"]
+testpaths = ["tests/api"]
+addopts = "-ra --strict-markers --tb=short"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["S603", "S607"] # Fixed local development executables, never request input.
+"scripts/smoke.py" = ["S310"] # Fixed loopback HTTP URLs.
+
+[tool.mypy]
+python_version = "3.12"
+files = ["apps/api", "scripts"]
+ignore_missing_imports = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_unused_ignores = true

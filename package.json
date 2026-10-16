@@ -1,0 +1,14 @@
+{
+  "name": "minhaai",
+  "private": true,
+  "workspaces": ["apps/web", "packages/contracts"],
+  "engines": {"node": ">=22 <23", "npm": ">=10 <11"},
+  "scripts": {
+    "dev": "npm run dev --workspace @minhaai/web",
+    "build": "npm run build --workspace @minhaai/web",
+    "lint": "npm run lint --workspace @minhaai/web",
+    "typecheck": "npm run typecheck --workspace @minhaai/contracts && npm run typecheck --workspace @minhaai/web",
+    "test": "node --experimental-strip-types --test tests/client.test.mjs",
+    "contracts:generate": "npm run generate --workspace @minhaai/contracts"
+  }
+}

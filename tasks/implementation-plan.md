@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase documentation/design gate passed with the reported checks, not runtime, external approval or launch readiness. Phases05–17 remain TODO; implementation backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 has implemented bootstrap artifacts but its runtime gate is BLOCKED; Phases06–17 and product implementation backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -9,7 +9,7 @@
 | 02 | Architecture & contracts | 01 | ADRs, module map, APIs/jobs/permissions plans | Modularity, trust boundaries and deployment risks reviewed | PASS |
 | 03 | Domain and data model | 02 | DBML/ERD, migrations plan, state machines | Ownership, uniqueness, idempotency & history modeled | PASS |
 | 04 | UX/UI specification | 01–03 | Sitemap, wireframes, tokens, RTL/LTR flows | UI states for loading/error/disabled/consent | PASS |
-| 05 | Workspace/bootstrap | 02–04 | Monorepo scaffolding, local Docker, CI skeleton | Bootable app/API, CI/lint checks, no secrets | TODO |
+| 05 | Workspace/bootstrap | 02–04 | Monorepo scaffolding, local Docker, CI skeleton | Bootable app/API, CI/lint checks, no secrets | BLOCKED |
 | 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests | TODO |
 | 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | TODO |
 | 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | TODO |
@@ -31,8 +31,8 @@
 - **03: PASS — DATA_DESIGN_COMPLETE.** 77 tables/53 owner-scoped tables/201 RESTRICT unique-target/type-compatible FKs; five billing/six support states, immutable snapshots/history, once-only grant/settlement/cancellation and Admin-configurable per-request recovery snapshot. DBML/PostgreSQL syntax/structural checks pass; runtime triggers/RLS/concurrency/migrations NOT RUN. See [report03](phase-reports/03.md).
 - **04: PASS — UX_SPECIFICATION_COMPLETE.** Current Phase04 request authorizes documentation only: 49 route/surface specifications, 12 journeys, every source SCR/FR/AC referenced, mobile/laptop wireframes, E/L/X/O/D states, bilingual behavior and accessible tokens. Thirteen wire-contract gaps have explicit unavailable/manual paths; no API or privilege widening. Static coverage/API-reference/link/scope/contrast checks only; interactive/accessibility/runtime feature acceptance NOT RUN. See [report04](phase-reports/04.md).
 - Latest owner [UD-001/002](../docs/source/2026-10-15-owner-decisions.md) authorizes early completion and Admin period control. Existing source files are unchanged. A policy edit is prospective and never moves an already confirmed deletion deadline; default30/calendar/Asia-Hebron is an explicit engineering interpretation of the PRD, not a permanent720h rule or legal approval.
-- **Release status: BLOCKED — EXTERNAL_GATES / IMPLEMENTATION_NOT_RUN.** Formal historical general-release signature/original interview provenance, actual legal/provider/source/site/hosting/scanner/backup/free-quota/quality evidence remain independent. No stale PRD-missing/Phase01-unexecuted blocker is current; earlier blocked reports were superseded by this authorized re-evaluation.
-- **05–17: TODO**, not executed. Phase04 adds UX documentation; no bootstrap/app implementation, staging/commit/push/deployment or paid resource. Validation helpers are scratch-only. Browser UI/diagram rendering NOT RUN. Exact commands/skips in each phase report; prior phase outcomes and all implementation backlog statuses remain unchanged.
+- **Release status: BLOCKED — EXTERNAL_GATES / PRODUCT_IMPLEMENTATION_PENDING.** Formal historical general-release signature/original interview provenance, actual legal/provider/source/site/hosting/scanner/backup/free-quota/quality evidence remain independent. No stale PRD-missing/Phase01-unexecuted blocker is current; earlier blocked reports were superseded by this authorized re-evaluation.
+- **05: BLOCKED — POSTGRESQL_RUNTIME_GATE.** Bootstrap artifacts, Next production build, type/lint/schema checks, 19 database-independent API tests, five client tests and actual HTTP liveness/forwarding/CSRF/bilingual checks are implemented and verified. Full checks report two PostgreSQL setup errors; Docker is missing and native PostgreSQL16.15 cannot allocate the host's required System V shared memory (EIO even with mmap). Migration/application-database readiness and a complete clean-clone boot remain unverified. See [report05](phase-reports/05.md) and [traceability](../docs/specs/phase-05-bootstrap.md). **06–17: TODO**; all product backlog statuses and prior phase outcomes remain unchanged. No commit/push/deployment or paid resource.
 
 ## Release gates that code cannot waive
 

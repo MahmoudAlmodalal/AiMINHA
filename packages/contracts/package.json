@@ -1,0 +1,13 @@
+{
+  "name": "@minhaai/contracts",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {".": "./src/index.ts"},
+  "scripts": {
+    "generate": "openapi-typescript openapi.json --output src/generated.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {"openapi-fetch": "0.17.0"},
+  "devDependencies": {"openapi-typescript": "7.13.0", "typescript": "5.9.3"}
+}
