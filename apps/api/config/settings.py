@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "privacy",
     "django.contrib.postgres",
     "catalog",
+    "eligibility",
 ]
 AUTH_USER_MODEL = "identity.Account"
 MIDDLEWARE = [
@@ -139,10 +140,17 @@ REST_FRAMEWORK = {
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": "MinhaAI implemented API",
-    "DESCRIPTION": "Bounded Phase 05–07 runtime: health, identity/privacy and reviewed catalog.",
+    "DESCRIPTION": (
+        "Bounded Phase 05–08 runtime: health, identity/privacy, catalog "
+        "and deterministic eligibility."
+    ),
     "VERSION": "0.1.0",
     "OAS_VERSION": "3.1.0",
     "COMPONENT_SPLIT_REQUEST": True,
+    "ENUM_NAME_OVERRIDES": {
+        "EducationLevelEnum": "eligibility.serializers.DEGREES",
+        "EligibilityProfileFieldEnum": "eligibility.serializers.FIELDS",
+    },
     "SERVE_INCLUDE_SCHEMA": False,
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.hooks.postprocess_schema_enums",

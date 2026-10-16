@@ -55,3 +55,13 @@ input:focus-visible { outline: 3px solid #13766a; outline-offset: 2px; }
 .catalog-main summary { cursor: pointer; font-weight: 600; }
 .catalog-review-field { display: contents; }
 @media (max-width: 36rem) { .catalog-main dl { grid-template-columns: 1fr; } .catalog-main dd { margin-block-end: .6rem; } }
+.eligibility-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1rem; margin-block: 1rem; }
+.eligibility fieldset { min-width: 0; border: 1px solid #bdc9c6; border-radius: .5rem; padding: 1rem; }
+.eligibility legend { padding-inline: .4rem; font-weight: 600; }
+.eligibility input:not([type="checkbox"]), .eligibility select { width: 100%; }
+.eligibility .confirm { align-items: flex-start; font-size: .9rem; }
+.eligibility .confirm input { flex: 0 0 auto; margin-block-start: .55rem; }
+.eligibility-unknown { padding-inline-start: .7rem; border-inline-start: 3px solid #9a3412; color: #7c2d12; }
+.eligibility-language { padding-block: .5rem; border-block-end: 1px solid #cbd5e1; margin-block-end: .75rem; }
+.eligibility-result { scroll-margin-block-start: 1rem; }
+.eligibility-result dd { overflow-wrap: anywhere; white-space: pre-line; }

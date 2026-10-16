@@ -29,3 +29,11 @@ instruction, retained Admin duration control and explicit external/integration g
 manual-first immutable candidates, independently evidenced source permissions,
 exact-version human approval, current-permission public reads and explicit
 search/deadline limits. No live source adapter or real-source approval is inferred.
+
+## Phase08 eligibility decision
+
+[0012 — evidence-bound deterministic eligibility](0012-evidence-bound-eligibility.md)
+records immutable student-confirmed profile facts, exact-version human-reviewed
+rules, mandatory-failure precedence, unknown-safe comparisons and the initial
+coverage-gated deterministic fit formula. Credential authenticity, grading
+equivalence, quality calibration and performance certification remain separate.

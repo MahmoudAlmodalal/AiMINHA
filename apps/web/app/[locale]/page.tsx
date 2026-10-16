@@ -10,6 +10,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         <span className="brand"><bdi>MinhaAI</bdi></span>
         <nav aria-label={ar ? "اللغة" : "Language"}>
           <a href={`/${locale}/scholarships`}>{ar ? "المنح الدراسية" : "Scholarships"}</a>{" · "}
+          <a href={`/${locale}/eligibility`}>{ar ? "الملف والأهلية" : "Profile and eligibility"}</a>{" · "}
           <a href={`/${locale}/account`}>{ar ? "الحساب والخصوصية" : "Account and privacy"}</a>{" · "}
           <a href={ar ? "/en" : "/ar"} lang={ar ? "en" : "ar"} hrefLang={ar ? "en" : "ar"}>
             {ar ? "English" : "العربية"}

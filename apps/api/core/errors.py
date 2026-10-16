@@ -83,6 +83,8 @@ def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
             "/api/v1/consents",
             "/api/v1/tickets/",
             "/api/v1/admin/",
+            "/api/v1/profile",
+            "/api/v1/eligibility/",
         )
     ):
         from identity.security import audit

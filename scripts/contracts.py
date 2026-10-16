@@ -70,10 +70,15 @@ def validate(document: dict[str, Any]) -> None:
         "/api/v1/admin/scholarships/{scholarship_id}",
         "/api/v1/admin/scholarships/{scholarship_id}/versions",
         "/api/v1/admin/scholarships/{scholarship_id}/moderation",
+        "/api/v1/profile",
+        "/api/v1/eligibility/evaluations",
+        "/api/v1/eligibility/evaluations/{evaluation_id}",
+        "/api/v1/admin/scholarships/{scholarship_id}/eligibility-rules",
     }
     if set(document["paths"]) != authorized:
         raise ValueError(
-            "Only Phase 05–07 health, identity/privacy and catalog routes are authorized."
+            "Only Phase 05–08 health, identity/privacy, catalog "
+            "and eligibility routes are authorized."
         )
     if set(document["paths"]["/api/v1/health"]) != {"get"}:
         raise ValueError("Health must expose only the safe GET contract.")

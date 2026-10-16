@@ -2,7 +2,7 @@ PYTHON ?= python3
 VENV := .venv/bin
 COMPOSE := docker compose --env-file .env -f infra/compose.yaml
 
-.PHONY: env setup db-up db-stop dev api web migrate migrations-check worker-check lint typecheck test unit contracts contracts-check build smoke smoke-identity smoke-catalog smoke-liveness secrets check
+.PHONY: env setup db-up db-stop dev api web migrate migrations-check worker-check lint typecheck test unit contracts contracts-check build smoke smoke-identity smoke-catalog smoke-eligibility smoke-liveness secrets check
 
 env:
 	$(PYTHON) scripts/setup.py
@@ -71,6 +71,9 @@ smoke-identity:
 
 smoke-catalog:
 	$(VENV)/python scripts/smoke_catalog.py
+
+smoke-eligibility:
+	$(VENV)/python scripts/smoke_eligibility.py
 
 smoke-liveness:
 	$(VENV)/python scripts/smoke.py --liveness-only

@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phases08–17 and unrelated product backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phases09–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -12,7 +12,7 @@
 | 05 | Workspace/bootstrap | 02–04 | Monorepo scaffolding, local Docker, CI skeleton | Bootable app/API, CI/lint checks, no secrets | PASS |
 | 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests | PASS |
 | 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | PASS |
-| 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | TODO |
+| 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | PASS |
 | 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | TODO |
 | 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | TODO |
 | 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | TODO |
@@ -83,3 +83,24 @@ and [scope](../docs/specs/phase-07-catalog.md). Only Phase07's current outcome c
 Phase08–17 and earlier outcomes are preserved. The user explicitly requested a GitHub
 push after completion; deployment, paid resources and provider calls remain outside
 scope.
+
+
+## Phase08 execution state — 2026-10-16
+
+**08: PASS — LOCAL_RULE_FIRST_ELIGIBILITY_GATE_WITH_MEASUREMENT_PLAN.** Typed
+nullable self-confirmed owned profile versions, exact-catalog/source human-reviewed
+structured rule bases, rule-first tri-state outcomes and evidence-backed fixed
+30/25/20/15/10 fit with >=70% coverage are implemented. Unknown data/scales remain
+unknown, hard failure dominates any score, and no probability or private AI route
+is fabricated. Fresh23-migration PostgreSQL verification passed257 backend tests
+(118 new eligibility cases), eight client tests, static/types/contracts/build and
+actual bilingual profile/auth/catalog/eligibility HTTP flows. Receipts retain opaque
+IDs only; SQL guards reject omitted/duplicate/null rule-check substitutions.
+The warm p95<=2s/20-client measurement plan is recorded; actual concurrent load
+measurement, academic authenticity/equivalences, weights quality, real source/MFA
+and production RLS/legal/release evidence remain unverified/external. See
+[report08](phase-reports/08.md), [scope](../docs/specs/phase-08-eligibility.md) and
+[ADR0012](../docs/adr/0012-evidence-bound-eligibility.md). Earlier phase outcomes and
+Phase09–17 are unchanged. The user's subsequent explicit `Push` instruction
+authorizes committing and publishing this bounded Phase08 change. Deployment,
+paid resources and provider calls remain unauthorized and were not performed.

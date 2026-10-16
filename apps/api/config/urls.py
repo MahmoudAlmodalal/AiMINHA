@@ -5,6 +5,7 @@ urlpatterns = [
     path("api/v1/health", HealthView.as_view(), name="health"),
     path("api/v1/", include("identity.urls")),
     path("api/v1/", include("catalog.urls")),
+    path("api/v1/", include("eligibility.urls")),
 ]
 handler400 = "core.errors.bad_request"
 handler403 = "core.errors.forbidden"

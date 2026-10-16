@@ -150,3 +150,39 @@ development server so it explicitly closes upstream connections. This avoids the
 observed Next rewrite pooled-socket `ECONNRESET` during consecutive requests.
 It is a local integration workaround, not a production server or concurrency
 performance claim. Database concurrency tests still use separate connections.
+
+## Phase08 deterministic eligibility and fit
+
+Run `make db-up migrate dev`, then open `/ar/eligibility` or `/en/eligibility`.
+The verified adult student can save a private, versioned manual profile and
+explicitly confirm each known field. Blank values remain unknown; a confirmed
+empty list means an explicit declaration of no entries. Self-report is not
+independent credential verification. Profiles and evaluations are owner-only;
+Admin moderation does not provide access to these private facts.
+
+Select a currently published scholarship to evaluate its exact reviewed rule
+basis against the current profile version. Catalog prose and search facets do
+not generate rules. A separate `MODERATION`/server-MFA review API binds structured
+criteria, source evidence and completeness to the exact catalog version/hash.
+Without that reviewed basis, the result is insufficient information. Source
+permission, publication, profile/rule versions and freshness are rechecked;
+obsolete evaluations cannot appear current.
+
+Every rule reports pass, fail or unknown with evidence. A failed mandatory
+condition always makes the aggregate ineligible. The initial fit weights are
+academic30%, field25%, nationality/residency20%, language15%, interest10%.
+A score appears only with at least70% covered verified comparisons; missing
+comparisons are not a zero score or a pass. Fit is not an acceptance probability,
+and the weights are uncalibrated. GPA comparisons require the same explicitly
+known scale; arithmetic within a scale never establishes institutional or
+cross-scale equivalence. This phase makes no AI/provider call or Credit charge.
+
+`make check build smoke-eligibility` validates the implementation and the actual
+same-origin profile/permission flow using synthetic local security email.
+Existing catalog behavior is preserved; new eligibility fixtures are authored
+synthetic data and do not seed a live scholarship/rule approval. Real MFA,
+source/credential approvals and production security gates remain independent.
+See [Phase08 scope and warm p95 measurement plan](docs/specs/phase-08-eligibility.md),
+[ADR0012](docs/adr/0012-evidence-bound-eligibility.md), and
+[report08](tasks/phase-reports/08.md). The warm p95 target is <=2 seconds;
+a production 20-client HTTP load result is not claimed by unit tests or smoke.

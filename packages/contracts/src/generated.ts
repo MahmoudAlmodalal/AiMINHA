@@ -100,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/scholarships/{scholarship_id}/eligibility-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEligibilityRuleBasis"];
+        put?: never;
+        post: operations["reviewEligibilityRuleBasis"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/scholarships/{scholarship_id}/moderation": {
         parameters: {
             query?: never;
@@ -308,6 +324,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/eligibility/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["evaluateEligibility"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eligibility/evaluations/{evaluation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEligibilityEvaluation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files": {
         parameters: {
             query?: never;
@@ -350,6 +398,22 @@ export interface paths {
         /** @description Public process liveness only. Does not assert database or external service readiness. */
         get: operations["health_retrieve"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEligibilityProfile"];
+        put: operations["saveEligibilityProfile"];
         post?: never;
         delete?: never;
         options?: never;
@@ -549,7 +613,7 @@ export interface components {
             title: string;
             provider: string;
             summary: string;
-            education_levels: components["schemas"]["EducationLevelsEnum"][];
+            education_levels: components["schemas"]["EducationLevelEnum"][];
             disciplines: string[];
             countries: string[];
             languages: string[];
@@ -583,7 +647,7 @@ export interface components {
             provider: string;
             /** @default  */
             summary: string;
-            education_levels?: components["schemas"]["EducationLevelsEnum"][];
+            education_levels?: components["schemas"]["EducationLevelEnum"][];
             disciplines?: string[];
             countries?: string[];
             languages?: string[];
@@ -605,6 +669,11 @@ export interface components {
         ChallengeRequest: {
             challenge_token: string;
         };
+        /**
+         * @description * `UNCALIBRATED` - UNCALIBRATED
+         * @enum {string}
+         */
+        ConfidenceEnum: "UNCALIBRATED";
         Consent: {
             version: number;
             state: components["schemas"]["ConsentStateEnum"];
@@ -628,6 +697,11 @@ export interface components {
          * @enum {string}
          */
         ConsentStateEnum: "GRANTED" | "REVOKED";
+        /**
+         * @description * `NOT_INDEPENDENTLY_VERIFIED` - NOT_INDEPENDENTLY_VERIFIED
+         * @enum {string}
+         */
+        CredentialVerificationEnum: "NOT_INDEPENDENTLY_VERIFIED";
         Csrf: {
             csrf_token: string;
         };
@@ -683,15 +757,70 @@ export interface components {
             next_cursor: string | null;
         };
         /**
+         * @description * `ACADEMIC` - ACADEMIC
+         *     * `FIELD` - FIELD
+         *     * `NATIONALITY_RESIDENCY` - NATIONALITY_RESIDENCY
+         *     * `LANGUAGE` - LANGUAGE
+         *     * `INTEREST` - INTEREST
+         * @enum {string}
+         */
+        DomainEnum: "ACADEMIC" | "FIELD" | "NATIONALITY_RESIDENCY" | "LANGUAGE" | "INTEREST";
+        DomainResult: {
+            domain: components["schemas"]["DomainEnum"];
+            weight_bps: number;
+            covered: boolean;
+            score_bps: number | null;
+            contribution_bps: number | null;
+            reason_code: string;
+        };
+        /**
          * @description * `BACHELOR` - BACHELOR
          *     * `MASTER` - MASTER
          *     * `PHD` - PHD
          * @enum {string}
          */
-        EducationLevelsEnum: "BACHELOR" | "MASTER" | "PHD";
+        EducationLevelEnum: "BACHELOR" | "MASTER" | "PHD";
+        /**
+         * @description * `nationalities` - nationalities
+         *     * `residency_country` - residency_country
+         *     * `degree_level` - degree_level
+         *     * `major` - major
+         *     * `qualification` - qualification
+         *     * `gpa` - gpa
+         *     * `languages` - languages
+         *     * `preferred_countries` - preferred_countries
+         * @enum {string}
+         */
+        EligibilityProfileFieldEnum: "nationalities" | "residency_country" | "degree_level" | "major" | "qualification" | "gpa" | "languages" | "preferred_countries";
         EmailRequest: {
             /** Format: email */
             email: string;
+        };
+        Evaluation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            profile_version_id: string;
+            /** Format: uuid */
+            scholarship_id: string;
+            /** Format: uuid */
+            scholarship_version_id: string;
+            /** Format: uuid */
+            rule_set_id: string | null;
+            policy_version: string;
+            engine_version: string;
+            weight_version: string;
+            /** Format: date-time */
+            evaluated_at: string;
+            result: components["schemas"]["Result"];
+        };
+        EvaluationInputRequest: {
+            /** Format: uuid */
+            profile_version_id: string;
+            /** Format: uuid */
+            scholarship_id: string;
+            /** Format: uuid */
+            scholarship_version_id: string;
         };
         FieldError: {
             field: string;
@@ -721,6 +850,12 @@ export interface components {
          */
         FileStateEnum: "INITIATED" | "QUARANTINED" | "SCANNING" | "ACCEPTED" | "REJECTED" | "PURGE_PENDING" | "PURGED";
         /**
+         * @description * `AVAILABLE` - AVAILABLE
+         *     * `INSUFFICIENT_COVERAGE` - INSUFFICIENT_COVERAGE
+         * @enum {string}
+         */
+        FitStatusEnum: "AVAILABLE" | "INSUFFICIENT_COVERAGE";
+        /**
          * @description * `CURRENT` - CURRENT
          *     * `STALE` - STALE
          *     * `UNKNOWN` - UNKNOWN
@@ -743,9 +878,24 @@ export interface components {
         GoogleStartRequest: {
             intent: components["schemas"]["IntentEnum"];
         };
-        Health: {
-            status: components["schemas"]["StatusEnum"];
+        Gpa: {
+            /** Format: decimal */
+            value: string;
+            scale: components["schemas"]["ScaleEnum"];
         };
+        GpaRequest: {
+            /** Format: decimal */
+            value: string;
+            scale: components["schemas"]["ScaleEnum"];
+        };
+        Health: {
+            status: components["schemas"]["HealthStatusEnum"];
+        };
+        /**
+         * @description * `ok` - ok
+         * @enum {string}
+         */
+        HealthStatusEnum: "ok";
         /**
          * @description * `SIGN_IN` - SIGN_IN
          *     * `LINK` - LINK
@@ -760,6 +910,24 @@ export interface components {
          * @enum {string}
          */
         KindEnum: "UNKNOWN" | "ROLLING" | "DATE_ONLY" | "CONFIRMED";
+        Language: {
+            language: string;
+            level: components["schemas"]["LevelEnum"] | components["schemas"]["NullEnum"];
+        };
+        LanguageRequest: {
+            language: string;
+            level: components["schemas"]["LevelEnum"] | components["schemas"]["NullEnum"];
+        };
+        /**
+         * @description * `A1` - A1
+         *     * `A2` - A2
+         *     * `B1` - B1
+         *     * `B2` - B2
+         *     * `C1` - C1
+         *     * `C2` - C2
+         * @enum {string}
+         */
+        LevelEnum: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
         /**
          * @description * `ar` - ar
          *     * `en` - en
@@ -789,6 +957,16 @@ export interface components {
             action: components["schemas"]["ActionEnum"];
             reason: string;
         };
+        NullEnum: null;
+        /**
+         * @description * `ONE_OF` - ONE_OF
+         *     * `INTERSECTS` - INTERSECTS
+         *     * `GPA_MIN` - GPA_MIN
+         *     * `LANGUAGE_MIN` - LANGUAGE_MIN
+         *     * `UNSUPPORTED` - UNSUPPORTED
+         * @enum {string}
+         */
+        OperatorEnum: "ONE_OF" | "INTERSECTS" | "GPA_MIN" | "LANGUAGE_MIN" | "UNSUPPORTED";
         /**
          * @description * `MANUAL` - MANUAL
          *     * `IMPORT` - IMPORT
@@ -822,6 +1000,45 @@ export interface components {
             field_errors?: components["schemas"]["FieldError"][];
             retry_after_seconds?: number;
         };
+        Profile: {
+            /** Format: uuid */
+            id: string | null;
+            revision: number;
+            /** Format: uuid */
+            version_id: string | null;
+            profile: components["schemas"]["ProfileFactsOutput"];
+            /** Format: date-time */
+            confirmed_at: string | null;
+            provenance: components["schemas"]["ProvenanceEnum"];
+            credential_verification: components["schemas"]["CredentialVerificationEnum"];
+        };
+        ProfileFactsOutput: {
+            nationalities: string[] | null;
+            residency_country: string | null;
+            degree_level: components["schemas"]["EducationLevelEnum"] | components["schemas"]["NullEnum"];
+            major: string | null;
+            qualification: components["schemas"]["QualificationEnum"] | components["schemas"]["NullEnum"];
+            gpa: components["schemas"]["Gpa"] | null;
+            languages: components["schemas"]["Language"][] | null;
+            preferred_countries: string[] | null;
+            confirmed_fields: components["schemas"]["EligibilityProfileFieldEnum"][];
+        };
+        ProfileFactsRequest: {
+            nationalities?: string[] | null;
+            residency_country?: string | null;
+            degree_level?: components["schemas"]["EducationLevelEnum"] | components["schemas"]["NullEnum"];
+            major?: string | null;
+            qualification?: components["schemas"]["QualificationEnum"] | components["schemas"]["NullEnum"];
+            gpa?: components["schemas"]["GpaRequest"] | null;
+            languages?: components["schemas"]["LanguageRequest"][] | null;
+            preferred_countries?: string[] | null;
+            confirmed_fields?: components["schemas"]["EligibilityProfileFieldEnum"][];
+        };
+        /**
+         * @description * `STUDENT_CONFIRMED_MANUAL` - STUDENT_CONFIRMED_MANUAL
+         * @enum {string}
+         */
+        ProvenanceEnum: "STUDENT_CONFIRMED_MANUAL";
         PublicPage: {
             items: components["schemas"]["PublicScholarship"][];
             total: number;
@@ -866,9 +1083,44 @@ export interface components {
             next_deadline: string | null;
             reminder_eligible: boolean;
         };
+        /**
+         * @description * `SECONDARY` - SECONDARY
+         *     * `DIPLOMA` - DIPLOMA
+         *     * `BACHELOR` - BACHELOR
+         *     * `MASTER` - MASTER
+         *     * `PHD` - PHD
+         *     * `OTHER` - OTHER
+         * @enum {string}
+         */
+        QualificationEnum: "SECONDARY" | "DIPLOMA" | "BACHELOR" | "MASTER" | "PHD" | "OTHER";
         Reauthentication: {
             reauthentication_token: string;
         };
+        Result: {
+            status: components["schemas"]["ResultStatusEnum"];
+            coverage_bps: number;
+            fit_score_bps: number | null;
+            fit_status: components["schemas"]["FitStatusEnum"];
+            confidence: components["schemas"]["ConfidenceEnum"];
+            domains: components["schemas"]["DomainResult"][];
+            rules: components["schemas"]["RuleResult"][];
+            missing_fields: string[];
+            limitations: string[];
+        };
+        /**
+         * @description * `PASS` - PASS
+         *     * `FAIL` - FAIL
+         *     * `UNKNOWN` - UNKNOWN
+         * @enum {string}
+         */
+        ResultEnum: "PASS" | "FAIL" | "UNKNOWN";
+        /**
+         * @description * `ELIGIBLE` - ELIGIBLE
+         *     * `INELIGIBLE` - INELIGIBLE
+         *     * `INSUFFICIENT_INFORMATION` - INSUFFICIENT_INFORMATION
+         * @enum {string}
+         */
+        ResultStatusEnum: "ELIGIBLE" | "INELIGIBLE" | "INSUFFICIENT_INFORMATION";
         /**
          * @description * `STUDENT` - STUDENT
          *     * `ADMIN` - ADMIN
@@ -885,6 +1137,88 @@ export interface components {
             deadline_date?: string | null;
             timezone?: string | null;
         };
+        RuleEvidence: {
+            profile_field: components["schemas"]["EligibilityProfileFieldEnum"];
+            profile_confirmed: boolean;
+            criterion_index: number;
+            source_text: string;
+        };
+        RuleHead: {
+            revision: number;
+            rule_set: components["schemas"]["RuleSet"] | null;
+        };
+        RuleOutput: {
+            key: string;
+            criterion_index: number;
+            field: components["schemas"]["EligibilityProfileFieldEnum"];
+            domain: components["schemas"]["DomainEnum"];
+            operator: components["schemas"]["OperatorEnum"];
+            values: string[];
+            gpa: components["schemas"]["Gpa"] | null;
+            language: components["schemas"]["Language"] | null;
+            mandatory: boolean;
+            verified: boolean;
+            evidence_text: string;
+        };
+        RuleRequest: {
+            key: string;
+            criterion_index: number;
+            field: components["schemas"]["EligibilityProfileFieldEnum"];
+            domain: components["schemas"]["DomainEnum"];
+            operator: components["schemas"]["OperatorEnum"];
+            values?: string[];
+            gpa?: components["schemas"]["GpaRequest"] | null;
+            language?: components["schemas"]["LanguageRequest"] | null;
+            /** @default true */
+            mandatory: boolean;
+            /** @default false */
+            verified: boolean;
+            evidence_text: string;
+        };
+        RuleResult: {
+            key: string;
+            criterion_index: number;
+            field: components["schemas"]["EligibilityProfileFieldEnum"];
+            domain: components["schemas"]["DomainEnum"];
+            mandatory: boolean;
+            result: components["schemas"]["ResultEnum"];
+            reason_code: string;
+            expected_display: string;
+            actual_display: string | null;
+            evidence: components["schemas"]["RuleEvidence"];
+        };
+        RuleSet: {
+            /** Format: uuid */
+            id: string;
+            version: number;
+            /** Format: uuid */
+            scholarship_version_id: string;
+            scholarship_hash: string;
+            complete: boolean;
+            rules: components["schemas"]["RuleOutput"][];
+            content_hash: string;
+            /** Format: uuid */
+            reviewed_by: string;
+            /** Format: date-time */
+            reviewed_at: string;
+            reason: string;
+        };
+        RuleSetInputRequest: {
+            /** Format: uuid */
+            scholarship_version_id: string;
+            complete: boolean;
+            rules: components["schemas"]["RuleRequest"][];
+            confirm_review: boolean;
+            reason: string;
+        };
+        /**
+         * @description * `PERCENT_100` - PERCENT_100
+         *     * `GPA_4_0` - GPA_4_0
+         *     * `GPA_5_0` - GPA_5_0
+         *     * `UNKNOWN` - UNKNOWN
+         * @enum {string}
+         */
+        ScaleEnum: "PERCENT_100" | "GPA_4_0" | "GPA_5_0" | "UNKNOWN";
         /**
          * @description * `TEXT` - TEXT
          * @enum {string}
@@ -973,11 +1307,6 @@ export interface components {
         SourcePage: {
             items: components["schemas"]["Source"][];
         };
-        /**
-         * @description * `ok` - ok
-         * @enum {string}
-         */
-        StatusEnum: "ok";
         /**
          * @description * `DRAFT` - DRAFT
          *     * `PUBLISHED` - PUBLISHED
@@ -1555,6 +1884,170 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEligibilityRuleBasis: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scholarship_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleHead"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reviewEligibilityRuleBasis: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                "X-CSRFToken": string;
+            };
+            path: {
+                scholarship_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleSetInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RuleSetInputRequest"];
+                "multipart/form-data": components["schemas"]["RuleSetInputRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleHead"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2877,6 +3370,167 @@ export interface operations {
             };
         };
     };
+    evaluateEligibility: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-CSRFToken": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EvaluationInputRequest"];
+                "multipart/form-data": components["schemas"]["EvaluationInputRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEligibilityEvaluation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                evaluation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     listOwnFileMetadata: {
         parameters: {
             query?: never;
@@ -3076,6 +3730,166 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEligibilityProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveEligibilityProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                "X-CSRFToken": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ProfileFactsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProfileFactsRequest"];
+                "multipart/form-data": components["schemas"]["ProfileFactsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
                 };
             };
         };

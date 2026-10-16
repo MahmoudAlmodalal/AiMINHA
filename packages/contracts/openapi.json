@@ -3,7 +3,7 @@
   "info": {
     "title": "MinhaAI implemented API",
     "version": "0.1.0",
-    "description": "Bounded Phase 05–07 runtime: health, identity/privacy and reviewed catalog."
+    "description": "Bounded Phase 05–08 runtime: health, identity/privacy, catalog and deterministic eligibility."
   },
   "paths": {
     "/api/v1/account/deletions": {
@@ -839,6 +839,260 @@
             "description": ""
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/scholarships/{scholarship_id}/eligibility-rules": {
+      "get": {
+        "operationId": "getEligibilityRuleBasis",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleHead"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "reviewEligibilityRuleBasis",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleSetInputRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleSetInputRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleSetInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleHead"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
             "content": {
               "application/json": {
                 "schema": {
@@ -2826,6 +3080,245 @@
         }
       }
     },
+    "/api/v1/eligibility/evaluations": {
+      "post": {
+        "operationId": "evaluateEligibility",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "eligibility"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationInputRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationInputRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Evaluation"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/eligibility/evaluations/{evaluation_id}": {
+      "get": {
+        "operationId": "getEligibilityEvaluation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "evaluation_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "eligibility"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Evaluation"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/files": {
       "get": {
         "operationId": "listOwnFileMetadata",
@@ -3078,6 +3571,239 @@
           "500": {
             "content": {
               "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/profile": {
+      "get": {
+        "operationId": "getEligibilityProfile",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveEligibilityProfile",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "profile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileFactsRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileFactsRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileFactsRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
                 }
@@ -4414,7 +5140,7 @@
           "education_levels": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EducationLevelsEnum"
+              "$ref": "#/components/schemas/EducationLevelEnum"
             },
             "maxItems": 3
           },
@@ -4576,7 +5302,7 @@
           "education_levels": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EducationLevelsEnum"
+              "$ref": "#/components/schemas/EducationLevelEnum"
             },
             "maxItems": 3
           },
@@ -4697,6 +5423,13 @@
         ],
         "additionalProperties": false
       },
+      "ConfidenceEnum": {
+        "enum": [
+          "UNCALIBRATED"
+        ],
+        "type": "string",
+        "description": "* `UNCALIBRATED` - UNCALIBRATED"
+      },
       "Consent": {
         "type": "object",
         "properties": {
@@ -4770,6 +5503,13 @@
         ],
         "type": "string",
         "description": "* `GRANTED` - GRANTED\n* `REVOKED` - REVOKED"
+      },
+      "CredentialVerificationEnum": {
+        "enum": [
+          "NOT_INDEPENDENTLY_VERIFIED"
+        ],
+        "type": "string",
+        "description": "* `NOT_INDEPENDENTLY_VERIFIED` - NOT_INDEPENDENTLY_VERIFIED"
       },
       "Csrf": {
         "type": "object",
@@ -4944,7 +5684,62 @@
         ],
         "additionalProperties": false
       },
-      "EducationLevelsEnum": {
+      "DomainEnum": {
+        "enum": [
+          "ACADEMIC",
+          "FIELD",
+          "NATIONALITY_RESIDENCY",
+          "LANGUAGE",
+          "INTEREST"
+        ],
+        "type": "string",
+        "description": "* `ACADEMIC` - ACADEMIC\n* `FIELD` - FIELD\n* `NATIONALITY_RESIDENCY` - NATIONALITY_RESIDENCY\n* `LANGUAGE` - LANGUAGE\n* `INTEREST` - INTEREST"
+      },
+      "DomainResult": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "$ref": "#/components/schemas/DomainEnum"
+          },
+          "weight_bps": {
+            "type": "integer",
+            "maximum": 10000,
+            "minimum": 0
+          },
+          "covered": {
+            "type": "boolean"
+          },
+          "score_bps": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 10000,
+            "minimum": 0
+          },
+          "contribution_bps": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 10000,
+            "minimum": 0
+          },
+          "reason_code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "contribution_bps",
+          "covered",
+          "domain",
+          "reason_code",
+          "score_bps",
+          "weight_bps"
+        ],
+        "additionalProperties": false
+      },
+      "EducationLevelEnum": {
         "enum": [
           "BACHELOR",
           "MASTER",
@@ -4952,6 +5747,20 @@
         ],
         "type": "string",
         "description": "* `BACHELOR` - BACHELOR\n* `MASTER` - MASTER\n* `PHD` - PHD"
+      },
+      "EligibilityProfileFieldEnum": {
+        "enum": [
+          "nationalities",
+          "residency_country",
+          "degree_level",
+          "major",
+          "qualification",
+          "gpa",
+          "languages",
+          "preferred_countries"
+        ],
+        "type": "string",
+        "description": "* `nationalities` - nationalities\n* `residency_country` - residency_country\n* `degree_level` - degree_level\n* `major` - major\n* `qualification` - qualification\n* `gpa` - gpa\n* `languages` - languages\n* `preferred_countries` - preferred_countries"
       },
       "EmailRequest": {
         "type": "object",
@@ -4965,6 +5774,86 @@
         },
         "required": [
           "email"
+        ],
+        "additionalProperties": false
+      },
+      "Evaluation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "profile_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scholarship_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scholarship_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rule_set_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "engine_version": {
+            "type": "string"
+          },
+          "weight_version": {
+            "type": "string"
+          },
+          "evaluated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "result": {
+            "$ref": "#/components/schemas/Result"
+          }
+        },
+        "required": [
+          "engine_version",
+          "evaluated_at",
+          "id",
+          "policy_version",
+          "profile_version_id",
+          "result",
+          "rule_set_id",
+          "scholarship_id",
+          "scholarship_version_id",
+          "weight_version"
+        ],
+        "additionalProperties": false
+      },
+      "EvaluationInputRequest": {
+        "type": "object",
+        "properties": {
+          "profile_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scholarship_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scholarship_version_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "profile_version_id",
+          "scholarship_id",
+          "scholarship_version_id"
         ],
         "additionalProperties": false
       },
@@ -5046,6 +5935,14 @@
         "type": "string",
         "description": "* `INITIATED` - INITIATED\n* `QUARANTINED` - QUARANTINED\n* `SCANNING` - SCANNING\n* `ACCEPTED` - ACCEPTED\n* `REJECTED` - REJECTED\n* `PURGE_PENDING` - PURGE_PENDING\n* `PURGED` - PURGED"
       },
+      "FitStatusEnum": {
+        "enum": [
+          "AVAILABLE",
+          "INSUFFICIENT_COVERAGE"
+        ],
+        "type": "string",
+        "description": "* `AVAILABLE` - AVAILABLE\n* `INSUFFICIENT_COVERAGE` - INSUFFICIENT_COVERAGE"
+      },
       "FreshnessEnum": {
         "enum": [
           "CURRENT",
@@ -5100,17 +5997,60 @@
         ],
         "additionalProperties": false
       },
+      "Gpa": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,6}(?:\\.\\d{0,4})?$"
+          },
+          "scale": {
+            "$ref": "#/components/schemas/ScaleEnum"
+          }
+        },
+        "required": [
+          "scale",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "GpaRequest": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,6}(?:\\.\\d{0,4})?$"
+          },
+          "scale": {
+            "$ref": "#/components/schemas/ScaleEnum"
+          }
+        },
+        "required": [
+          "scale",
+          "value"
+        ],
+        "additionalProperties": false
+      },
       "Health": {
         "type": "object",
         "properties": {
           "status": {
-            "$ref": "#/components/schemas/StatusEnum"
+            "$ref": "#/components/schemas/HealthStatusEnum"
           }
         },
         "required": [
           "status"
         ],
         "additionalProperties": false
+      },
+      "HealthStatusEnum": {
+        "enum": [
+          "ok"
+        ],
+        "type": "string",
+        "description": "* `ok` - ok"
       },
       "IntentEnum": {
         "enum": [
@@ -5129,6 +6069,69 @@
         ],
         "type": "string",
         "description": "* `UNKNOWN` - UNKNOWN\n* `ROLLING` - ROLLING\n* `DATE_ONLY` - DATE_ONLY\n* `CONFIRMED` - CONFIRMED"
+      },
+      "Language": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "maxLength": 5,
+            "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$"
+          },
+          "level": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LevelEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          }
+        },
+        "required": [
+          "language",
+          "level"
+        ],
+        "additionalProperties": false
+      },
+      "LanguageRequest": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5,
+            "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$"
+          },
+          "level": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LevelEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          }
+        },
+        "required": [
+          "language",
+          "level"
+        ],
+        "additionalProperties": false
+      },
+      "LevelEnum": {
+        "enum": [
+          "A1",
+          "A2",
+          "B1",
+          "B2",
+          "C1",
+          "C2"
+        ],
+        "type": "string",
+        "description": "* `A1` - A1\n* `A2` - A2\n* `B1` - B1\n* `B2` - B2\n* `C1` - C1\n* `C2` - C2"
       },
       "LocaleEnum": {
         "enum": [
@@ -5218,6 +6221,20 @@
           "version_id"
         ],
         "additionalProperties": false
+      },
+      "NullEnum": {
+        "type": "null"
+      },
+      "OperatorEnum": {
+        "enum": [
+          "ONE_OF",
+          "INTERSECTS",
+          "GPA_MIN",
+          "LANGUAGE_MIN",
+          "UNSUPPORTED"
+        ],
+        "type": "string",
+        "description": "* `ONE_OF` - ONE_OF\n* `INTERSECTS` - INTERSECTS\n* `GPA_MIN` - GPA_MIN\n* `LANGUAGE_MIN` - LANGUAGE_MIN\n* `UNSUPPORTED` - UNSUPPORTED"
       },
       "OriginEnum": {
         "enum": [
@@ -5319,6 +6336,258 @@
           "type"
         ],
         "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "version_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ProfileFactsOutput"
+          },
+          "confirmed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceEnum"
+          },
+          "credential_verification": {
+            "$ref": "#/components/schemas/CredentialVerificationEnum"
+          }
+        },
+        "required": [
+          "confirmed_at",
+          "credential_verification",
+          "id",
+          "profile",
+          "provenance",
+          "revision",
+          "version_id"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileFactsOutput": {
+        "type": "object",
+        "properties": {
+          "nationalities": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 2,
+              "pattern": "^[A-Z]{2}$"
+            },
+            "maxItems": 5
+          },
+          "residency_country": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2,
+            "pattern": "^[A-Z]{2}$"
+          },
+          "degree_level": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EducationLevelEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "major": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200
+          },
+          "qualification": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/QualificationEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "gpa": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Gpa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "languages": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Language"
+            }
+          },
+          "preferred_countries": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 2,
+              "pattern": "^[A-Z]{2}$"
+            },
+            "maxItems": 30
+          },
+          "confirmed_fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EligibilityProfileFieldEnum"
+            },
+            "maxItems": 8
+          }
+        },
+        "required": [
+          "confirmed_fields",
+          "degree_level",
+          "gpa",
+          "languages",
+          "major",
+          "nationalities",
+          "preferred_countries",
+          "qualification",
+          "residency_country"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileFactsRequest": {
+        "type": "object",
+        "properties": {
+          "nationalities": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2,
+              "pattern": "^[A-Z]{2}$"
+            },
+            "maxItems": 5
+          },
+          "residency_country": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 2,
+            "pattern": "^[A-Z]{2}$"
+          },
+          "degree_level": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EducationLevelEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "major": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "qualification": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/QualificationEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "gpa": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/GpaRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "languages": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LanguageRequest"
+            }
+          },
+          "preferred_countries": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2,
+              "pattern": "^[A-Z]{2}$"
+            },
+            "maxItems": 30
+          },
+          "confirmed_fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EligibilityProfileFieldEnum"
+            },
+            "maxItems": 8
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProvenanceEnum": {
+        "enum": [
+          "STUDENT_CONFIRMED_MANUAL"
+        ],
+        "type": "string",
+        "description": "* `STUDENT_CONFIRMED_MANUAL` - STUDENT_CONFIRMED_MANUAL"
       },
       "PublicPage": {
         "type": "object",
@@ -5526,6 +6795,18 @@
         ],
         "additionalProperties": false
       },
+      "QualificationEnum": {
+        "enum": [
+          "SECONDARY",
+          "DIPLOMA",
+          "BACHELOR",
+          "MASTER",
+          "PHD",
+          "OTHER"
+        ],
+        "type": "string",
+        "description": "* `SECONDARY` - SECONDARY\n* `DIPLOMA` - DIPLOMA\n* `BACHELOR` - BACHELOR\n* `MASTER` - MASTER\n* `PHD` - PHD\n* `OTHER` - OTHER"
+      },
       "Reauthentication": {
         "type": "object",
         "properties": {
@@ -5537,6 +6818,87 @@
           "reauthentication_token"
         ],
         "additionalProperties": false
+      },
+      "Result": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ResultStatusEnum"
+          },
+          "coverage_bps": {
+            "type": "integer",
+            "maximum": 10000,
+            "minimum": 0
+          },
+          "fit_score_bps": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 10000,
+            "minimum": 0
+          },
+          "fit_status": {
+            "$ref": "#/components/schemas/FitStatusEnum"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/ConfidenceEnum"
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainResult"
+            }
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleResult"
+            }
+          },
+          "missing_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "confidence",
+          "coverage_bps",
+          "domains",
+          "fit_score_bps",
+          "fit_status",
+          "limitations",
+          "missing_fields",
+          "rules",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "ResultEnum": {
+        "enum": [
+          "PASS",
+          "FAIL",
+          "UNKNOWN"
+        ],
+        "type": "string",
+        "description": "* `PASS` - PASS\n* `FAIL` - FAIL\n* `UNKNOWN` - UNKNOWN"
+      },
+      "ResultStatusEnum": {
+        "enum": [
+          "ELIGIBLE",
+          "INELIGIBLE",
+          "INSUFFICIENT_INFORMATION"
+        ],
+        "type": "string",
+        "description": "* `ELIGIBLE` - ELIGIBLE\n* `INELIGIBLE` - INELIGIBLE\n* `INSUFFICIENT_INFORMATION` - INSUFFICIENT_INFORMATION"
       },
       "RolesEnum": {
         "enum": [
@@ -5591,6 +6953,355 @@
           "kind"
         ],
         "additionalProperties": false
+      },
+      "RuleEvidence": {
+        "type": "object",
+        "properties": {
+          "profile_field": {
+            "$ref": "#/components/schemas/EligibilityProfileFieldEnum"
+          },
+          "profile_confirmed": {
+            "type": "boolean"
+          },
+          "criterion_index": {
+            "type": "integer"
+          },
+          "source_text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "criterion_index",
+          "profile_confirmed",
+          "profile_field",
+          "source_text"
+        ],
+        "additionalProperties": false
+      },
+      "RuleHead": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer"
+          },
+          "rule_set": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RuleSet"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "revision",
+          "rule_set"
+        ],
+        "additionalProperties": false
+      },
+      "RuleOutput": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+          },
+          "criterion_index": {
+            "type": "integer",
+            "maximum": 49,
+            "minimum": 0
+          },
+          "field": {
+            "$ref": "#/components/schemas/EligibilityProfileFieldEnum"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/DomainEnum"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/OperatorEnum"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "maxItems": 50
+          },
+          "gpa": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Gpa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "language": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Language"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "evidence_text": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "criterion_index",
+          "domain",
+          "evidence_text",
+          "field",
+          "gpa",
+          "key",
+          "language",
+          "mandatory",
+          "operator",
+          "values",
+          "verified"
+        ],
+        "additionalProperties": false
+      },
+      "RuleRequest": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+          },
+          "criterion_index": {
+            "type": "integer",
+            "maximum": 49,
+            "minimum": 0
+          },
+          "field": {
+            "$ref": "#/components/schemas/EligibilityProfileFieldEnum"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/DomainEnum"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/OperatorEnum"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "maxItems": 50
+          },
+          "gpa": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/GpaRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "language": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LanguageRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mandatory": {
+            "type": "boolean",
+            "default": true
+          },
+          "verified": {
+            "type": "boolean",
+            "default": false
+          },
+          "evidence_text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "criterion_index",
+          "domain",
+          "evidence_text",
+          "field",
+          "key",
+          "operator"
+        ],
+        "additionalProperties": false
+      },
+      "RuleResult": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "criterion_index": {
+            "type": "integer"
+          },
+          "field": {
+            "$ref": "#/components/schemas/EligibilityProfileFieldEnum"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/DomainEnum"
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ResultEnum"
+          },
+          "reason_code": {
+            "type": "string"
+          },
+          "expected_display": {
+            "type": "string"
+          },
+          "actual_display": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/RuleEvidence"
+          }
+        },
+        "required": [
+          "actual_display",
+          "criterion_index",
+          "domain",
+          "evidence",
+          "expected_display",
+          "field",
+          "key",
+          "mandatory",
+          "reason_code",
+          "result"
+        ],
+        "additionalProperties": false
+      },
+      "RuleSet": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "scholarship_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scholarship_hash": {
+            "type": "string"
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleOutput"
+            }
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "reviewed_by": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "complete",
+          "content_hash",
+          "id",
+          "reason",
+          "reviewed_at",
+          "reviewed_by",
+          "rules",
+          "scholarship_hash",
+          "scholarship_version_id",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "RuleSetInputRequest": {
+        "type": "object",
+        "properties": {
+          "scholarship_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleRequest"
+            }
+          },
+          "confirm_review": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "complete",
+          "confirm_review",
+          "reason",
+          "rules",
+          "scholarship_version_id"
+        ],
+        "additionalProperties": false
+      },
+      "ScaleEnum": {
+        "enum": [
+          "PERCENT_100",
+          "GPA_4_0",
+          "GPA_5_0",
+          "UNKNOWN"
+        ],
+        "type": "string",
+        "description": "* `PERCENT_100` - PERCENT_100\n* `GPA_4_0` - GPA_4_0\n* `GPA_5_0` - GPA_5_0\n* `UNKNOWN` - UNKNOWN"
       },
       "SearchModeEnum": {
         "enum": [
@@ -5905,13 +7616,6 @@
           "items"
         ],
         "additionalProperties": false
-      },
-      "StatusEnum": {
-        "enum": [
-          "ok"
-        ],
-        "type": "string",
-        "description": "* `ok` - ok"
       },
       "VisibilityEnum": {
         "enum": [

@@ -48,3 +48,5 @@ jobs:
         run: make smoke-identity secrets
       - name: Catalog public search, bilingual pages and denied moderation HTTP flow
         run: make smoke-catalog secrets
+      - name: Private eligibility profile and uncertainty HTTP flow
+        run: make smoke-eligibility secrets
