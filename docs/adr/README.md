@@ -37,3 +37,12 @@ records immutable student-confirmed profile facts, exact-version human-reviewed
 rules, mandatory-failure precedence, unknown-safe comparisons and the initial
 coverage-gated deterministic fit formula. Credential authenticity, grading
 equivalence, quality calibration and performance certification remain separate.
+
+## Phase09 credit accounting decision
+
+[0013 — guarded credits and reconciliation](0013-credits-and-reconciliation.md)
+records once-only adult activation grants, immutable prospective policies,
+Asia/Hebron spend/admission days, atomic synthetic output accounting and retained
+uncertain holds. Real execution/price authorization, provider/domain validation,
+manual adjustments, final erasure and production-scale scan performance remain
+separately gated.

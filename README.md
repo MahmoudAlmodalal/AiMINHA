@@ -186,3 +186,46 @@ See [Phase08 scope and warm p95 measurement plan](docs/specs/phase-08-eligibilit
 [ADR0012](docs/adr/0012-evidence-bound-eligibility.md), and
 [report08](tasks/phase-reports/08.md). The warm p95 target is <=2 seconds;
 a production 20-client HTTP load result is not claimed by unit tests or smoke.
+
+## Phase09 credits and reconciliation
+
+Run `make db-up migrate dev`, then open `/ar/wallet` or `/en/wallet` after
+verifying an adult student account. Verification grants 30 Credits once in the
+activation transaction. The upgrade migration also grants existing active,
+verified adult students once. Credits are internal units, with no payment or
+purchase route. A new day never refills the wallet. The beta daily spend cap is 6
+in `Asia/Hebron`; held and settled Credits count toward the captured day's cap.
+The global cap is 100 admitted logical AI operations per Hebron day, including
+failed operations. A retry of the same operation does not consume that cap again.
+
+Current internal prices are matching AI 1, CV extraction 4 and new document 6.
+Browsing, rules-based eligibility, manual edits, same-version re-export and the
+extension are free entitlements; naming them does not enable unfinished phases.
+Only Admins with `COST_POLICY` and fresh server-verified MFA can publish a new
+policy through `/api/v1/admin/policies/credits`, with CSRF, `If-Match` and
+`Idempotency-Key`. Accepted operations keep their captured price and policy;
+changing a policy never resets day counters or tops up an existing grant.
+Real MFA enrollment remains a separate external integration gate.
+
+The atomic service kernel holds funds before work and debits only when an exact
+validated output is saved in the settlement transaction. It has a local-only,
+server-created synthetic fixture adapter for financial tests. There is no public
+reserve/run/settle endpoint or provider call. Real matching/CV/document adapters,
+input classification and provider approval remain gated by Phases10–11.
+
+`make credits-timeouts` inspects expired reservations without changes.
+`.venv/bin/python apps/api/manage.py mark_credit_timeouts --apply`
+marks overdue 15-minute reservations `RECONCILING`. It is safe to repeat or resume
+the DB scan after a crash. Run it from your own local scheduler when exercising
+timeouts; no production scheduler is installed. An uncertain outcome retains its
+hold, including after the experimental 24-hour review target. That target is an
+overdue indication, never an automatic debit, release or resend. Resolving real
+provider uncertainty needs the later authoritative adapter; it is unavailable here.
+
+Run `make check build smoke-credits credits-timeouts` for local validation.
+Concurrent financial tests use separate PostgreSQL connections. SQL guards
+verify journal/hold/day/output conservation at commit; their full-journal scans
+are a bounded correctness baseline and require profiling before production load.
+See [Phase09 scope](docs/specs/phase-09-credits.md),
+[ADR0013](docs/adr/0013-credits-and-reconciliation.md) and
+[report09](tasks/phase-reports/09.md) for evidence and remaining gates.

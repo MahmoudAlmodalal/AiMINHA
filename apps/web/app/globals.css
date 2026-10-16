@@ -65,3 +65,13 @@ input:focus-visible { outline: 3px solid #13766a; outline-offset: 2px; }
 .eligibility-language { padding-block: .5rem; border-block-end: 1px solid #cbd5e1; margin-block-end: .75rem; }
 .eligibility-result { scroll-margin-block-start: 1rem; }
 .eligibility-result dd { overflow-wrap: anywhere; white-space: pre-line; }
+.credit-wallet section { margin-block: 2rem; }
+.credit-wallet .credit-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 1rem; }
+.credit-balances > div { border: 1px solid #bdc9c6; border-radius: .5rem; padding: 1rem; }
+.credit-balances dd { font-size: 1.25rem; font-weight: 700; }
+.credit-description-row { display: contents; }
+.credit-history { list-style: none; padding: 0; }
+.credit-history > li { margin-block: .75rem; }
+.credit-history h3 { line-height: 1.6; }
+.credit-amount { font-weight: 700; font-size: 1.2rem; color: var(--text); }
+.credit-pagination { margin-block: 1rem; }

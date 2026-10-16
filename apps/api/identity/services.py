@@ -126,7 +126,10 @@ def verify_email(token: str, correlation: Any) -> None:
     user.email_verified_at, user.state = timezone.now(), Account.State.ACTIVE
     user.save(update_fields=["email_verified_at", "state"])
     audit(user, "email_verified", correlation=correlation)
-    # Credit activation/grant is a Phase09 integration; no balances exist here.
+    # The grant shares activation's account lock and transaction: neither commits alone.
+    from credits.services import grant_signup
+
+    grant_signup(user.pk)
 
 
 @transaction.atomic

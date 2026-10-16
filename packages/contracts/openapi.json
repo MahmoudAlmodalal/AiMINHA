@@ -3,7 +3,7 @@
   "info": {
     "title": "MinhaAI implemented API",
     "version": "0.1.0",
-    "description": "Bounded Phase 05–08 runtime: health, identity/privacy, catalog and deterministic eligibility."
+    "description": "Bounded Phase 05–09 runtime: health, identity/privacy, catalog, deterministic eligibility and credits. Provider execution is unavailable."
   },
   "paths": {
     "/api/v1/account/deletions": {
@@ -412,6 +412,240 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Ack"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/policies/credits": {
+      "get": {
+        "operationId": "getCreditPolicy",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditPolicy"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "publishCreditPolicy",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditPolicyInputRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditPolicyInputRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditPolicyInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditPolicy"
                 }
               }
             },
@@ -3581,6 +3815,229 @@
         }
       }
     },
+    "/api/v1/operations": {
+      "get": {
+        "operationId": "listCreditOperations",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "maximum": 1000000,
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20
+            }
+          }
+        ],
+        "tags": [
+          "operations"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditOperations"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/operations/{operation_id}": {
+      "get": {
+        "operationId": "getCreditOperation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "operation_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "operations"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditOperation"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/profile": {
       "get": {
         "operationId": "getEligibilityProfile",
@@ -4993,6 +5450,218 @@
           }
         }
       }
+    },
+    "/api/v1/wallet": {
+      "get": {
+        "operationId": "getWallet",
+        "tags": [
+          "wallet"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wallet"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/entries": {
+      "get": {
+        "operationId": "listWalletEntries",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "maximum": 1000000,
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20
+            }
+          }
+        ],
+        "tags": [
+          "wallet"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditEntries"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5408,6 +6077,16 @@
         ],
         "additionalProperties": false
       },
+      "CatalogDeadlineKindEnum": {
+        "enum": [
+          "UNKNOWN",
+          "ROLLING",
+          "DATE_ONLY",
+          "CONFIRMED"
+        ],
+        "type": "string",
+        "description": "* `UNKNOWN` - UNKNOWN\n* `ROLLING` - ROLLING\n* `DATE_ONLY` - DATE_ONLY\n* `CONFIRMED` - CONFIRMED"
+      },
       "ChallengeRequest": {
         "type": "object",
         "properties": {
@@ -5510,6 +6189,403 @@
         ],
         "type": "string",
         "description": "* `NOT_INDEPENDENTLY_VERIFIED` - NOT_INDEPENDENTLY_VERIFIED"
+      },
+      "CreditDaily": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "timezone": {
+            "$ref": "#/components/schemas/TimezoneEnum"
+          },
+          "spent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cap": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remaining": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "cap",
+          "day",
+          "remaining",
+          "reserved",
+          "spent",
+          "timezone"
+        ],
+        "additionalProperties": false
+      },
+      "CreditEntries": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreditEntry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 50,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "additionalProperties": false
+      },
+      "CreditEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CreditEntryKindEnum"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "operation_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "policy_version": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason_code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "created_at",
+          "id",
+          "kind",
+          "operation_id",
+          "policy_version",
+          "reason_code"
+        ],
+        "additionalProperties": false
+      },
+      "CreditEntryKindEnum": {
+        "enum": [
+          "SIGNUP_GRANT",
+          "DEBIT"
+        ],
+        "type": "string",
+        "description": "* `SIGNUP_GRANT` - SIGNUP_GRANT\n* `DEBIT` - DEBIT"
+      },
+      "CreditGlobalDaily": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "timezone": {
+            "$ref": "#/components/schemas/TimezoneEnum"
+          },
+          "admitted_operations": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cap": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remaining": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "admitted_operations",
+          "cap",
+          "day",
+          "remaining",
+          "timezone"
+        ],
+        "additionalProperties": false
+      },
+      "CreditOperation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "service": {
+            "$ref": "#/components/schemas/ServiceEnum"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CreditOperationStateEnum"
+          },
+          "price": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "policy_version": {
+            "type": "integer"
+          },
+          "captured_day": {
+            "type": "string",
+            "format": "date"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reserve_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reconciliation_started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "resolution_due_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "resolution_overdue": {
+            "type": "boolean"
+          },
+          "output_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "captured_day",
+          "created_at",
+          "id",
+          "output_id",
+          "policy_version",
+          "price",
+          "reconciliation_started_at",
+          "reserve_until",
+          "resolution_due_at",
+          "resolution_overdue",
+          "service",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "CreditOperationStateEnum": {
+        "enum": [
+          "RESERVED",
+          "RUNNING",
+          "RECONCILING",
+          "SETTLED",
+          "RELEASED"
+        ],
+        "type": "string",
+        "description": "* `RESERVED` - RESERVED\n* `RUNNING` - RUNNING\n* `RECONCILING` - RECONCILING\n* `SETTLED` - SETTLED\n* `RELEASED` - RELEASED"
+      },
+      "CreditOperations": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreditOperation"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 50,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "additionalProperties": false
+      },
+      "CreditPolicy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "signup_grant": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "daily_spend_cap": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "global_ai_cap": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timezone": {
+            "$ref": "#/components/schemas/TimezoneEnum"
+          },
+          "reserve_minutes": {
+            "$ref": "#/components/schemas/ReserveMinutesEnum"
+          },
+          "reconciliation_target_hours": {
+            "$ref": "#/components/schemas/ReconciliationTargetHoursEnum"
+          },
+          "prices": {
+            "$ref": "#/components/schemas/CreditPrices"
+          },
+          "free_services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ai_execution_available": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ai_execution_available",
+          "daily_spend_cap",
+          "free_services",
+          "global_ai_cap",
+          "id",
+          "prices",
+          "reconciliation_target_hours",
+          "reserve_minutes",
+          "signup_grant",
+          "timezone",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "CreditPolicyInputRequest": {
+        "type": "object",
+        "properties": {
+          "signup_grant": {
+            "type": "integer",
+            "maximum": 1000000,
+            "minimum": 0
+          },
+          "daily_spend_cap": {
+            "type": "integer",
+            "maximum": 1000000,
+            "minimum": 0
+          },
+          "global_ai_cap": {
+            "type": "integer",
+            "maximum": 1000000,
+            "minimum": 0
+          },
+          "matching_price": {
+            "type": "integer",
+            "maximum": 1000000,
+            "minimum": 1
+          },
+          "cv_price": {
+            "type": "integer",
+            "maximum": 1000000,
+            "minimum": 1
+          },
+          "document_price": {
+            "type": "integer",
+            "maximum": 1000000,
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "cv_price",
+          "daily_spend_cap",
+          "document_price",
+          "global_ai_cap",
+          "matching_price",
+          "reason",
+          "signup_grant"
+        ],
+        "additionalProperties": false
+      },
+      "CreditPrices": {
+        "type": "object",
+        "properties": {
+          "MATCHING_AI": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "CV_EXTRACTION": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "DOCUMENT_NEW": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "CV_EXTRACTION",
+          "DOCUMENT_NEW",
+          "MATCHING_AI"
+        ],
+        "additionalProperties": false
       },
       "Csrf": {
         "type": "object",
@@ -6059,16 +7135,6 @@
         ],
         "type": "string",
         "description": "* `SIGN_IN` - SIGN_IN\n* `LINK` - LINK"
-      },
-      "KindEnum": {
-        "enum": [
-          "UNKNOWN",
-          "ROLLING",
-          "DATE_ONLY",
-          "CONFIRMED"
-        ],
-        "type": "string",
-        "description": "* `UNKNOWN` - UNKNOWN\n* `ROLLING` - ROLLING\n* `DATE_ONLY` - DATE_ONLY\n* `CONFIRMED` - CONFIRMED"
       },
       "Language": {
         "type": "object",
@@ -6624,7 +7690,7 @@
         "type": "object",
         "properties": {
           "kind": {
-            "$ref": "#/components/schemas/KindEnum"
+            "$ref": "#/components/schemas/CatalogDeadlineKindEnum"
           },
           "label": {
             "type": "string",
@@ -6819,6 +7885,20 @@
         ],
         "additionalProperties": false
       },
+      "ReconciliationTargetHoursEnum": {
+        "enum": [
+          24
+        ],
+        "type": "integer",
+        "description": "* `24` - 24"
+      },
+      "ReserveMinutesEnum": {
+        "enum": [
+          15
+        ],
+        "type": "integer",
+        "description": "* `15` - 15"
+      },
       "Result": {
         "type": "object",
         "properties": {
@@ -6912,7 +7992,7 @@
         "type": "object",
         "properties": {
           "kind": {
-            "$ref": "#/components/schemas/KindEnum"
+            "$ref": "#/components/schemas/CatalogDeadlineKindEnum"
           },
           "label": {
             "type": "string",
@@ -7310,6 +8390,15 @@
         "type": "string",
         "description": "* `TEXT` - TEXT"
       },
+      "ServiceEnum": {
+        "enum": [
+          "MATCHING_AI",
+          "CV_EXTRACTION",
+          "DOCUMENT_NEW"
+        ],
+        "type": "string",
+        "description": "* `MATCHING_AI` - MATCHING_AI\n* `CV_EXTRACTION` - CV_EXTRACTION\n* `DOCUMENT_NEW` - DOCUMENT_NEW"
+      },
       "Session": {
         "type": "object",
         "properties": {
@@ -7371,6 +8460,40 @@
         },
         "required": [
           "asset_id"
+        ],
+        "additionalProperties": false
+      },
+      "SignupGrant": {
+        "type": "object",
+        "properties": {
+          "awarded": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "policy_version": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "awarded_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "amount",
+          "awarded",
+          "awarded_at",
+          "policy_version"
         ],
         "additionalProperties": false
       },
@@ -7617,6 +8740,13 @@
         ],
         "additionalProperties": false
       },
+      "TimezoneEnum": {
+        "enum": [
+          "Asia/Hebron"
+        ],
+        "type": "string",
+        "description": "* `Asia/Hebron` - Asia/Hebron"
+      },
       "VisibilityEnum": {
         "enum": [
           "DRAFT",
@@ -7628,6 +8758,45 @@
         ],
         "type": "string",
         "description": "* `DRAFT` - DRAFT\n* `PUBLISHED` - PUBLISHED\n* `REVERIFY` - REVERIFY\n* `SUSPENDED` - SUSPENDED\n* `ARCHIVED` - ARCHIVED\n* `REJECTED` - REJECTED"
+      },
+      "Wallet": {
+        "type": "object",
+        "properties": {
+          "posted_balance": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reserved_balance": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "available_balance": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "signup_grant": {
+            "$ref": "#/components/schemas/SignupGrant"
+          },
+          "daily": {
+            "$ref": "#/components/schemas/CreditDaily"
+          },
+          "global_daily": {
+            "$ref": "#/components/schemas/CreditGlobalDaily"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/CreditPolicy"
+          }
+        },
+        "required": [
+          "available_balance",
+          "daily",
+          "global_daily",
+          "policy",
+          "posted_balance",
+          "reserved_balance",
+          "signup_grant"
+        ],
+        "additionalProperties": false
       }
     },
     "securitySchemes": {

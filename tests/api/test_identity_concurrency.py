@@ -5,6 +5,8 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
+from credits.models import LedgerEntry, Wallet
+from credits.services import initialize_policy
 from django.db import connections
 from django.utils import timezone
 from identity.models import Account
@@ -39,6 +41,8 @@ def race(*actions):
 
 
 def test_verification_is_single_use_under_two_database_connections(settings):
+    # Transaction tests flush seeded policy rows; restore the migration default.
+    initialize_policy()
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
     user = Account.objects.create_user(
         "race@example.invalid", "synthetic-only", birth_date=date(2000, 1, 1), locale="en"
@@ -48,6 +52,8 @@ def test_verification_is_single_use_under_two_database_connections(settings):
     assert outcomes.count(None) == 1 and outcomes.count("INVALID_PROOF") == 1
     user.refresh_from_db()
     assert user.state == "ACTIVE"
+    assert Wallet.objects.get(owner=user).posted_balance == 30
+    assert LedgerEntry.objects.filter(owner=user, kind="SIGNUP_GRANT").count() == 1
 
 
 @pytest.mark.parametrize("before_cutoff", [True, False])

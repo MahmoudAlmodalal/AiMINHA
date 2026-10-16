@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/policies/credits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCreditPolicy"];
+        put?: never;
+        post: operations["publishCreditPolicy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/scholarships": {
         parameters: {
             query?: never;
@@ -405,6 +421,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCreditOperations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/{operation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCreditOperation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profile": {
         parameters: {
             query?: never;
@@ -565,6 +613,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getWallet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listWalletEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -666,6 +746,14 @@ export interface components {
             origin: components["schemas"]["OriginEnum"];
             reason: string;
         };
+        /**
+         * @description * `UNKNOWN` - UNKNOWN
+         *     * `ROLLING` - ROLLING
+         *     * `DATE_ONLY` - DATE_ONLY
+         *     * `CONFIRMED` - CONFIRMED
+         * @enum {string}
+         */
+        CatalogDeadlineKindEnum: "UNKNOWN" | "ROLLING" | "DATE_ONLY" | "CONFIRMED";
         ChallengeRequest: {
             challenge_token: string;
         };
@@ -702,6 +790,111 @@ export interface components {
          * @enum {string}
          */
         CredentialVerificationEnum: "NOT_INDEPENDENTLY_VERIFIED";
+        CreditDaily: {
+            /** Format: date */
+            day: string;
+            timezone: components["schemas"]["TimezoneEnum"];
+            spent: number;
+            reserved: number;
+            cap: number;
+            remaining: number;
+        };
+        CreditEntries: {
+            items: components["schemas"]["CreditEntry"][];
+            total: number;
+            page: number;
+            page_size: number;
+        };
+        CreditEntry: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["CreditEntryKindEnum"];
+            amount: number;
+            /** Format: uuid */
+            operation_id: string | null;
+            policy_version: number;
+            /** Format: date-time */
+            created_at: string;
+            reason_code: string;
+        };
+        /**
+         * @description * `SIGNUP_GRANT` - SIGNUP_GRANT
+         *     * `DEBIT` - DEBIT
+         * @enum {string}
+         */
+        CreditEntryKindEnum: "SIGNUP_GRANT" | "DEBIT";
+        CreditGlobalDaily: {
+            /** Format: date */
+            day: string;
+            timezone: components["schemas"]["TimezoneEnum"];
+            admitted_operations: number;
+            cap: number;
+            remaining: number;
+        };
+        CreditOperation: {
+            /** Format: uuid */
+            id: string;
+            service: components["schemas"]["ServiceEnum"];
+            state: components["schemas"]["CreditOperationStateEnum"];
+            price: number;
+            policy_version: number;
+            /** Format: date */
+            captured_day: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            reserve_until: string;
+            /** Format: date-time */
+            reconciliation_started_at: string | null;
+            /** Format: date-time */
+            resolution_due_at: string | null;
+            resolution_overdue: boolean;
+            /** Format: uuid */
+            output_id: string | null;
+        };
+        /**
+         * @description * `RESERVED` - RESERVED
+         *     * `RUNNING` - RUNNING
+         *     * `RECONCILING` - RECONCILING
+         *     * `SETTLED` - SETTLED
+         *     * `RELEASED` - RELEASED
+         * @enum {string}
+         */
+        CreditOperationStateEnum: "RESERVED" | "RUNNING" | "RECONCILING" | "SETTLED" | "RELEASED";
+        CreditOperations: {
+            items: components["schemas"]["CreditOperation"][];
+            total: number;
+            page: number;
+            page_size: number;
+        };
+        CreditPolicy: {
+            /** Format: uuid */
+            id: string;
+            version: number;
+            signup_grant: number;
+            daily_spend_cap: number;
+            global_ai_cap: number;
+            timezone: components["schemas"]["TimezoneEnum"];
+            reserve_minutes: components["schemas"]["ReserveMinutesEnum"];
+            reconciliation_target_hours: components["schemas"]["ReconciliationTargetHoursEnum"];
+            prices: components["schemas"]["CreditPrices"];
+            free_services: string[];
+            ai_execution_available: boolean;
+        };
+        CreditPolicyInputRequest: {
+            signup_grant: number;
+            daily_spend_cap: number;
+            global_ai_cap: number;
+            matching_price: number;
+            cv_price: number;
+            document_price: number;
+            reason: string;
+        };
+        CreditPrices: {
+            MATCHING_AI: number;
+            CV_EXTRACTION: number;
+            DOCUMENT_NEW: number;
+        };
         Csrf: {
             csrf_token: string;
         };
@@ -902,14 +1095,6 @@ export interface components {
          * @enum {string}
          */
         IntentEnum: "SIGN_IN" | "LINK";
-        /**
-         * @description * `UNKNOWN` - UNKNOWN
-         *     * `ROLLING` - ROLLING
-         *     * `DATE_ONLY` - DATE_ONLY
-         *     * `CONFIRMED` - CONFIRMED
-         * @enum {string}
-         */
-        KindEnum: "UNKNOWN" | "ROLLING" | "DATE_ONLY" | "CONFIRMED";
         Language: {
             language: string;
             level: components["schemas"]["LevelEnum"] | components["schemas"]["NullEnum"];
@@ -1047,7 +1232,7 @@ export interface components {
             search_mode: components["schemas"]["SearchModeEnum"];
         };
         PublicRound: {
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["CatalogDeadlineKindEnum"];
             label: string;
             source_text: string;
             closes_at: string | null;
@@ -1096,6 +1281,16 @@ export interface components {
         Reauthentication: {
             reauthentication_token: string;
         };
+        /**
+         * @description * `24` - 24
+         * @enum {integer}
+         */
+        ReconciliationTargetHoursEnum: 24;
+        /**
+         * @description * `15` - 15
+         * @enum {integer}
+         */
+        ReserveMinutesEnum: 15;
         Result: {
             status: components["schemas"]["ResultStatusEnum"];
             coverage_bps: number;
@@ -1128,7 +1323,7 @@ export interface components {
          */
         RolesEnum: "STUDENT" | "ADMIN";
         RoundRequest: {
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["CatalogDeadlineKindEnum"];
             /** @default  */
             label: string;
             /** @default  */
@@ -1224,6 +1419,13 @@ export interface components {
          * @enum {string}
          */
         SearchModeEnum: "TEXT";
+        /**
+         * @description * `MATCHING_AI` - MATCHING_AI
+         *     * `CV_EXTRACTION` - CV_EXTRACTION
+         *     * `DOCUMENT_NEW` - DOCUMENT_NEW
+         * @enum {string}
+         */
+        ServiceEnum: "MATCHING_AI" | "CV_EXTRACTION" | "DOCUMENT_NEW";
         Session: {
             /** Format: uuid */
             actor_id: string;
@@ -1241,6 +1443,13 @@ export interface components {
         ShareInputRequest: {
             /** Format: uuid */
             asset_id: string;
+        };
+        SignupGrant: {
+            awarded: boolean;
+            amount: number | null;
+            policy_version: number | null;
+            /** Format: date-time */
+            awarded_at: string | null;
         };
         SignupRequest: {
             /** Format: email */
@@ -1308,6 +1517,11 @@ export interface components {
             items: components["schemas"]["Source"][];
         };
         /**
+         * @description * `Asia/Hebron` - Asia/Hebron
+         * @enum {string}
+         */
+        TimezoneEnum: "Asia/Hebron";
+        /**
          * @description * `DRAFT` - DRAFT
          *     * `PUBLISHED` - PUBLISHED
          *     * `REVERIFY` - REVERIFY
@@ -1317,6 +1531,15 @@ export interface components {
          * @enum {string}
          */
         VisibilityEnum: "DRAFT" | "PUBLISHED" | "REVERIFY" | "SUSPENDED" | "ARCHIVED" | "REJECTED";
+        Wallet: {
+            posted_balance: number;
+            reserved_balance: number;
+            available_balance: number;
+            signup_grant: components["schemas"]["SignupGrant"];
+            daily: components["schemas"]["CreditDaily"];
+            global_daily: components["schemas"]["CreditGlobalDaily"];
+            policy: components["schemas"]["CreditPolicy"];
+        };
     };
     responses: never;
     parameters: never;
@@ -1593,6 +1816,166 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ack"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCreditPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditPolicy"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    publishCreditPolicy: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                "X-CSRFToken": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreditPolicyInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreditPolicyInputRequest"];
+                "multipart/form-data": components["schemas"]["CreditPolicyInputRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditPolicy"];
                 };
             };
             400: {
@@ -3734,6 +4117,161 @@ export interface operations {
             };
         };
     };
+    listCreditOperations: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditOperations"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCreditOperation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditOperation"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     getEligibilityProfile: {
         parameters: {
             query?: never;
@@ -4616,6 +5154,159 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ack"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getWallet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Wallet"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listWalletEntries: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditEntries"];
                 };
             };
             400: {

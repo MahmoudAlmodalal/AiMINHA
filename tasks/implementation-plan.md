@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phases09–17 and unrelated product backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phases10–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -13,7 +13,7 @@
 | 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests | PASS |
 | 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | PASS |
 | 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | PASS |
-| 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | TODO |
+| 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | PASS |
 | 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | TODO |
 | 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | TODO |
 | 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts | TODO |
@@ -104,3 +104,29 @@ and production RLS/legal/release evidence remain unverified/external. See
 Phase09–17 are unchanged. The user's subsequent explicit `Push` instruction
 authorizes committing and publishing this bounded Phase08 change. Deployment,
 paid resources and provider calls remain unauthorized and were not performed.
+
+## Phase09 execution state — 2026-10-16
+
+**09: PASS — LOCAL_CREDIT_ACCOUNTING_GATE_WITH_SYNTHETIC_EXECUTION.** Once-only
+verified adult activation grants, append-only credit journals, guarded holds,
+Asia/Hebron spend/admission days, prospective scoped-MFA policies and captured
+prices now pass real PostgreSQL concurrency tests. Validated saved synthetic
+outputs settle once; failure releases once; uncertain/expired operations retain
+holds in RECONCILING with15-minute investigation and24-hour review markers.
+Fresh25-migration verification passed359 backend tests (102 new financial cases),
+eight client tests, static/types/contracts/build, all five HTTP smoke flows and
+worker/timeout preflights. A concurrent policy-head join defect was fixed and
+its CAS regression passes. Populated legacy-active backfill was separately
+verified without granting pending/suspended/Admin/minor fixtures.
+
+The bilingual wallet is read-only. Real provider execution/domain validators,
+client-confirmed price quotes, authoritative reconciliation recovery, production
+scheduling/worker principals/RLS/performance, manual finance adjustments and final
+erasure/legal/provider approvals remain gated. No purchase, real AI, commit,
+push, deployment or paid resource was performed. See [report09](phase-reports/09.md),
+[scope](../docs/specs/phase-09-credits.md) and
+[ADR0013](../docs/adr/0013-credits-and-reconciliation.md). This entry supersedes
+only Phase09's earlier TODO; Phases00–08 and10–17 outcomes remain unchanged.
+The user's subsequent explicit `ارفع` instruction authorizes committing and
+publishing this bounded Phase09 change only. Deployment and paid resources
+remain unauthorized.
