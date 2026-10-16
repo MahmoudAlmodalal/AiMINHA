@@ -11,6 +11,8 @@ if (
 }
 
 const config: NextConfig = {
+  // Development startup must not write generated instructions into the source tree.
+  agentRules: false,
   poweredByHeader: false,
   transpilePackages: ["@minhaai/contracts"],
   async redirects() {
