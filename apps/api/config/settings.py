@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "core",
     "identity",
     "privacy",
+    "django.contrib.postgres",
+    "catalog",
 ]
 AUTH_USER_MODEL = "identity.Account"
 MIDDLEWARE = [
@@ -91,6 +93,7 @@ AUTH_PASSWORD_VALIDATORS = [
 IDENTITY_RATE_LIMIT = (
     10  # Engineering default, per operation/IP and normalized identity / 15 minutes.
 )
+CATALOG_PUBLIC_RATE_LIMIT = 120  # Engineering bound per server-observed IP / 15 minutes.
 EMAIL_BACKEND = (
     "identity.mail.PrivateLocalMailBackend"
     if LOCAL
@@ -135,8 +138,8 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "core.errors.exception_handler",
 }
 SPECTACULAR_SETTINGS = {
-    "TITLE": "MinhaAI implemented bootstrap API",
-    "DESCRIPTION": "Phase 05 runtime surface only. Health is liveness, not dependency readiness.",
+    "TITLE": "MinhaAI implemented API",
+    "DESCRIPTION": "Bounded Phase 05–07 runtime: health, identity/privacy and reviewed catalog.",
     "VERSION": "0.1.0",
     "OAS_VERSION": "3.1.0",
     "COMPONENT_SPLIT_REQUEST": True,

@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "MinhaAI implemented bootstrap API",
+    "title": "MinhaAI implemented API",
     "version": "0.1.0",
-    "description": "Phase 05 runtime surface only. Health is liveness, not dependency readiness."
+    "description": "Bounded Phase 05–07 runtime: health, identity/privacy and reviewed catalog."
   },
   "paths": {
     "/api/v1/account/deletions": {
@@ -438,6 +438,1133 @@
             "description": ""
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/scholarships": {
+      "get": {
+        "operationId": "listCatalogCandidates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "visibility",
+            "schema": {
+              "enum": [
+                "DRAFT",
+                "PUBLISHED",
+                "REVERIFY",
+                "SUSPENDED",
+                "ARCHIVED",
+                "REJECTED"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "* `DRAFT` - DRAFT\n* `PUBLISHED` - PUBLISHED\n* `REVERIFY` - REVERIFY\n* `SUSPENDED` - SUSPENDED\n* `ARCHIVED` - ARCHIVED\n* `REJECTED` - REJECTED"
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPage"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCatalogCandidate",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateInputRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateInputRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminScholarship"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/scholarships/{scholarship_id}": {
+      "get": {
+        "operationId": "getCatalogCandidate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminScholarship"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/scholarships/{scholarship_id}/moderation": {
+      "post": {
+        "operationId": "moderateCatalogCandidate",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminScholarship"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/scholarships/{scholarship_id}/versions": {
+      "post": {
+        "operationId": "reviseCatalogCandidate",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateInputRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateInputRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminScholarship"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/sources": {
+      "get": {
+        "operationId": "listCatalogSources",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePage"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCatalogSource",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceInputRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceInputRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/admin/sources/{source_id}/versions": {
+      "post": {
+        "operationId": "reviseCatalogSource",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-CSRFToken",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "source_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceInputRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceInputRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
@@ -1961,6 +3088,342 @@
         }
       }
     },
+    "/api/v1/scholarships": {
+      "get": {
+        "operationId": "searchScholarships",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "country",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          {
+            "in": "query",
+            "name": "deadline_before",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "discipline",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          {
+            "in": "query",
+            "name": "education_level",
+            "schema": {
+              "enum": [
+                "BACHELOR",
+                "MASTER",
+                "PHD"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "* `BACHELOR` - BACHELOR\n* `MASTER` - MASTER\n* `PHD` - PHD"
+          },
+          {
+            "in": "query",
+            "name": "funding",
+            "schema": {
+              "enum": [
+                "FULL",
+                "PARTIAL",
+                "WAIVER",
+                "AID",
+                "UNKNOWN"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "* `FULL` - FULL\n* `PARTIAL` - PARTIAL\n* `WAIVER` - WAIVER\n* `AID` - AID\n* `UNKNOWN` - UNKNOWN"
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          {
+            "in": "query",
+            "name": "mode",
+            "schema": {
+              "enum": [
+                "TEXT",
+                "SEMANTIC"
+              ],
+              "type": "string",
+              "default": "TEXT",
+              "minLength": 1
+            },
+            "description": "* `TEXT` - TEXT\n* `SEMANTIC` - SEMANTIC"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string",
+              "default": "",
+              "maxLength": 200
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "enum": [
+                "recent",
+                "deadline",
+                "relevance"
+              ],
+              "type": "string",
+              "default": "recent",
+              "minLength": 1
+            },
+            "description": "* `recent` - recent\n* `deadline` - deadline\n* `relevance` - relevance"
+          }
+        ],
+        "tags": [
+          "scholarships"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPage"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/scholarships/{scholarship_id}": {
+      "get": {
+        "operationId": "getScholarship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "scholarships"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicScholarship"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/session": {
       "get": {
         "operationId": "getSession",
@@ -2825,6 +4288,92 @@
         ],
         "additionalProperties": false
       },
+      "ActionEnum": {
+        "enum": [
+          "APPROVE",
+          "REJECT",
+          "REVERIFY",
+          "SUSPEND",
+          "ARCHIVE",
+          "RESTORE"
+        ],
+        "type": "string",
+        "description": "* `APPROVE` - APPROVE\n* `REJECT` - REJECT\n* `REVERIFY` - REVERIFY\n* `SUSPEND` - SUSPEND\n* `ARCHIVE` - ARCHIVE\n* `RESTORE` - RESTORE"
+      },
+      "AdminPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminScholarship"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "page_size": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "additionalProperties": false
+      },
+      "AdminScholarship": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/VisibilityEnum"
+          },
+          "published_version_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "latest": {
+            "$ref": "#/components/schemas/Candidate"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModerationEvent"
+            }
+          }
+        },
+        "required": [
+          "history",
+          "id",
+          "latest",
+          "published_version_id",
+          "revision",
+          "versions",
+          "visibility"
+        ],
+        "additionalProperties": false
+      },
       "Authorization": {
         "type": "object",
         "properties": {
@@ -2840,6 +4389,296 @@
         "required": [
           "authorization_url",
           "expires_at"
+        ],
+        "additionalProperties": false
+      },
+      "Candidate": {
+        "type": "object",
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "provider": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "education_levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EducationLevelsEnum"
+            },
+            "maxItems": 3
+          },
+          "disciplines": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "maxItems": 30
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "maxItems": 30
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "maxItems": 30
+          },
+          "funding": {
+            "$ref": "#/components/schemas/FundingEnum"
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "maxItems": 50
+          },
+          "required_documents": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "maxItems": 50
+          },
+          "submission_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "maxLength": 1000
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicRound"
+            }
+          },
+          "source_checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "internal_notes": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "origin": {
+            "$ref": "#/components/schemas/OriginEnum"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "source_revision_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "duplicate_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "content_hash",
+          "countries",
+          "created_at",
+          "created_by",
+          "criteria",
+          "disciplines",
+          "duplicate_ids",
+          "education_levels",
+          "funding",
+          "id",
+          "internal_notes",
+          "languages",
+          "origin",
+          "provider",
+          "reason",
+          "required_documents",
+          "rounds",
+          "source_checked_at",
+          "source_id",
+          "source_revision_id",
+          "submission_url",
+          "summary",
+          "title",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "CandidateInputRequest": {
+        "type": "object",
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "summary": {
+            "type": "string",
+            "default": "",
+            "maxLength": 10000
+          },
+          "education_levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EducationLevelsEnum"
+            },
+            "maxItems": 3
+          },
+          "disciplines": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "maxItems": 30
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "maxItems": 30
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "maxItems": 30
+          },
+          "funding": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FundingEnum"
+              }
+            ],
+            "default": "UNKNOWN"
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "maxItems": 50
+          },
+          "required_documents": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "maxItems": 50
+          },
+          "submission_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoundRequest"
+            }
+          },
+          "source_checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "internal_notes": {
+            "type": "string",
+            "default": "",
+            "maxLength": 10000
+          },
+          "origin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OriginEnum"
+              }
+            ],
+            "default": "MANUAL"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "provider",
+          "reason",
+          "source_id",
+          "title"
         ],
         "additionalProperties": false
       },
@@ -3105,6 +4944,15 @@
         ],
         "additionalProperties": false
       },
+      "EducationLevelsEnum": {
+        "enum": [
+          "BACHELOR",
+          "MASTER",
+          "PHD"
+        ],
+        "type": "string",
+        "description": "* `BACHELOR` - BACHELOR\n* `MASTER` - MASTER\n* `PHD` - PHD"
+      },
       "EmailRequest": {
         "type": "object",
         "properties": {
@@ -3198,6 +5046,26 @@
         "type": "string",
         "description": "* `INITIATED` - INITIATED\n* `QUARANTINED` - QUARANTINED\n* `SCANNING` - SCANNING\n* `ACCEPTED` - ACCEPTED\n* `REJECTED` - REJECTED\n* `PURGE_PENDING` - PURGE_PENDING\n* `PURGED` - PURGED"
       },
+      "FreshnessEnum": {
+        "enum": [
+          "CURRENT",
+          "STALE",
+          "UNKNOWN"
+        ],
+        "type": "string",
+        "description": "* `CURRENT` - CURRENT\n* `STALE` - STALE\n* `UNKNOWN` - UNKNOWN"
+      },
+      "FundingEnum": {
+        "enum": [
+          "FULL",
+          "PARTIAL",
+          "WAIVER",
+          "AID",
+          "UNKNOWN"
+        ],
+        "type": "string",
+        "description": "* `FULL` - FULL\n* `PARTIAL` - PARTIAL\n* `WAIVER` - WAIVER\n* `AID` - AID\n* `UNKNOWN` - UNKNOWN"
+      },
       "GoogleCallbackRequest": {
         "type": "object",
         "properties": {
@@ -3252,6 +5120,16 @@
         "type": "string",
         "description": "* `SIGN_IN` - SIGN_IN\n* `LINK` - LINK"
       },
+      "KindEnum": {
+        "enum": [
+          "UNKNOWN",
+          "ROLLING",
+          "DATE_ONLY",
+          "CONFIRMED"
+        ],
+        "type": "string",
+        "description": "* `UNKNOWN` - UNKNOWN\n* `ROLLING` - ROLLING\n* `DATE_ONLY` - DATE_ONLY\n* `CONFIRMED` - CONFIRMED"
+      },
       "LocaleEnum": {
         "enum": [
           "ar",
@@ -3281,6 +5159,73 @@
           "password"
         ],
         "additionalProperties": false
+      },
+      "ModerationEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "action",
+          "actor_id",
+          "created_at",
+          "id",
+          "reason",
+          "version_id"
+        ],
+        "additionalProperties": false
+      },
+      "ModerationRequest": {
+        "type": "object",
+        "properties": {
+          "version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "$ref": "#/components/schemas/ActionEnum"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "action",
+          "reason",
+          "version_id"
+        ],
+        "additionalProperties": false
+      },
+      "OriginEnum": {
+        "enum": [
+          "MANUAL",
+          "IMPORT"
+        ],
+        "type": "string",
+        "description": "* `MANUAL` - MANUAL\n* `IMPORT` - IMPORT"
       },
       "PasswordRequest": {
         "type": "object",
@@ -3318,6 +5263,16 @@
           "password"
         ],
         "additionalProperties": false
+      },
+      "PermissionStatusEnum": {
+        "enum": [
+          "UNVERIFIED",
+          "APPROVED",
+          "BLOCKED",
+          "REVOKED"
+        ],
+        "type": "string",
+        "description": "* `UNVERIFIED` - UNVERIFIED\n* `APPROVED` - APPROVED\n* `BLOCKED` - BLOCKED\n* `REVOKED` - REVOKED"
       },
       "Problem": {
         "type": "object",
@@ -3365,6 +5320,212 @@
         ],
         "additionalProperties": false
       },
+      "PublicPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicScholarship"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "page_size": {
+            "type": "integer"
+          },
+          "search_mode": {
+            "$ref": "#/components/schemas/SearchModeEnum"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "search_mode",
+          "total"
+        ],
+        "additionalProperties": false
+      },
+      "PublicRound": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/KindEnum"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "source_text": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "closes_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "deadline_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "closes_at",
+          "deadline_date",
+          "kind",
+          "label",
+          "source_text",
+          "timezone"
+        ],
+        "additionalProperties": false
+      },
+      "PublicScholarship": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "education_levels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disciplines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "funding": {
+            "$ref": "#/components/schemas/FundingEnum"
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "required_documents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "submission_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "maxLength": 1000
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceCitation"
+          },
+          "source_checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "freshness": {
+            "$ref": "#/components/schemas/FreshnessEnum"
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicRound"
+            }
+          },
+          "next_deadline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reminder_eligible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "countries",
+          "criteria",
+          "disciplines",
+          "education_levels",
+          "freshness",
+          "funding",
+          "id",
+          "languages",
+          "next_deadline",
+          "provider",
+          "reminder_eligible",
+          "required_documents",
+          "rounds",
+          "source",
+          "source_checked_at",
+          "submission_url",
+          "summary",
+          "title",
+          "verified_at",
+          "version",
+          "version_id"
+        ],
+        "additionalProperties": false
+      },
       "Reauthentication": {
         "type": "object",
         "properties": {
@@ -3384,6 +5545,59 @@
         ],
         "type": "string",
         "description": "* `STUDENT` - STUDENT\n* `ADMIN` - ADMIN"
+      },
+      "RoundRequest": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/KindEnum"
+          },
+          "label": {
+            "type": "string",
+            "default": "",
+            "maxLength": 200
+          },
+          "source_text": {
+            "type": "string",
+            "default": "",
+            "maxLength": 1000
+          },
+          "closes_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "deadline_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 10
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "SearchModeEnum": {
+        "enum": [
+          "TEXT"
+        ],
+        "type": "string",
+        "description": "* `TEXT` - TEXT"
       },
       "Session": {
         "type": "object",
@@ -3480,12 +5694,236 @@
         ],
         "additionalProperties": false
       },
+      "Source": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 1000
+          },
+          "permission_status": {
+            "$ref": "#/components/schemas/PermissionStatusEnum"
+          },
+          "license_basis": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "permission_evidence": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "date_checked": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "valid_until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "allow_manual": {
+            "type": "boolean"
+          },
+          "allow_import": {
+            "type": "boolean"
+          },
+          "freshness_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 365,
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "editor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "automation_enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "allow_import",
+          "allow_manual",
+          "automation_enabled",
+          "date_checked",
+          "editor_id",
+          "freshness_days",
+          "id",
+          "license_basis",
+          "name",
+          "permission_evidence",
+          "permission_status",
+          "reason",
+          "revision",
+          "url",
+          "valid_until",
+          "version_id"
+        ],
+        "additionalProperties": false
+      },
+      "SourceCitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "url",
+          "version_id"
+        ],
+        "additionalProperties": false
+      },
+      "SourceInputRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "permission_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PermissionStatusEnum"
+              }
+            ],
+            "default": "UNVERIFIED"
+          },
+          "license_basis": {
+            "type": "string",
+            "default": "",
+            "maxLength": 2000
+          },
+          "permission_evidence": {
+            "type": "string",
+            "default": "",
+            "maxLength": 2000
+          },
+          "date_checked": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "valid_until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "allow_manual": {
+            "type": "boolean",
+            "default": true
+          },
+          "allow_import": {
+            "type": "boolean",
+            "default": false
+          },
+          "freshness_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 365,
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "name",
+          "reason",
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "SourcePage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
       "StatusEnum": {
         "enum": [
           "ok"
         ],
         "type": "string",
         "description": "* `ok` - ok"
+      },
+      "VisibilityEnum": {
+        "enum": [
+          "DRAFT",
+          "PUBLISHED",
+          "REVERIFY",
+          "SUSPENDED",
+          "ARCHIVED",
+          "REJECTED"
+        ],
+        "type": "string",
+        "description": "* `DRAFT` - DRAFT\n* `PUBLISHED` - PUBLISHED\n* `REVERIFY` - REVERIFY\n* `SUSPENDED` - SUSPENDED\n* `ARCHIVED` - ARCHIVED\n* `REJECTED` - REJECTED"
       }
     },
     "securitySchemes": {

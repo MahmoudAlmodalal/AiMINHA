@@ -46,3 +46,5 @@ jobs:
         run: make smoke worker-check
       - name: Identity, local verification mail and account UI HTTP flow
         run: make smoke-identity secrets
+      - name: Catalog public search, bilingual pages and denied moderation HTTP flow
+        run: make smoke-catalog secrets

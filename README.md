@@ -110,3 +110,43 @@ is not enabled. Live Google/SMTP/MFA proof was not exercised; real privileged
 Admin operations remain denied without a configured server MFA backend. The role
 matrix, source conflicts and remaining gates are in [Phase06 scope](docs/specs/phase-06-identity-privacy.md)
 and [report06](tasks/phase-reports/06.md).
+
+## Phase07 catalog and source moderation
+
+After `make db-up migrate dev`, browse `/ar/scholarships` or `/en/scholarships`.
+The public catalog starts empty: no real-source permissions or award facts are
+seeded. Search uses PostgreSQL full text, public filters and bounded pages.
+Unknown funding, uncertain deadlines and missing freshness policies remain
+explicitly unknown. The deadline filter includes confirmed future instants through
+the selected UTC calendar day; it never guesses the donor's closing time.
+
+`/{locale}/admin/catalog` provides the source registry, manual candidate entry,
+immutable version comparison and exact-version human moderation. Every admin read
+and mutation requires the existing server session, `MODERATION` scope and recent
+server-verified MFA; recording an approved source additionally requires
+`SOURCE_APPROVAL`, checked licensing/use basis and evidence. The live MFA backend
+remains a Phase06 external gate, so ordinary local accounts cannot use these
+privileged operations. Tests use isolated synthetic server proofs; no browser or
+API field can manufacture one.
+
+A permitted structured import is a supplied draft payload, never an outbound
+fetch. Automation is always disabled. Candidate changes withdraw public visibility
+until reviewed; restoring a listing returns it to review. Source revision changes,
+revocation and expiry also withdraw the public projection until valid review.
+Internal notes, permission evidence and editor identities remain private to the
+moderation projection. No source crawler, semantic provider, personal matching,
+student report workflow or reminder scheduler is added in this phase.
+
+Run `make check build smoke smoke-identity smoke-catalog worker-check` for the
+combined local checks (ports 3000/8000 must be free for smokes). The catalog smoke
+checks six bilingual routes, the actual API rewrite, public search and denied
+anonymous moderation; it does not claim browser interaction or real source/legal
+approval. See [Phase07 scope](docs/specs/phase-07-catalog.md),
+[ADR0011](docs/adr/0011-catalog-publication.md) and
+[report07](tasks/phase-reports/07.md) for evidence and remaining gates.
+
+Local `make api`, `make dev` and smoke commands use Django's `--nothreading`
+development server so it explicitly closes upstream connections. This avoids the
+observed Next rewrite pooled-socket `ECONNRESET` during consecutive requests.
+It is a local integration workaround, not a production server or concurrency
+performance claim. Database concurrency tests still use separate connections.

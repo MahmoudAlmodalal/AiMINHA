@@ -22,3 +22,10 @@ ADRs are **DOCUMENTED WORKING DESIGN / ASSUMPTION**, reconciled to the supplied 
 [0010 — identity/privacy boundaries](0010-identity-privacy-boundaries.md) records
 the implemented local auth/consent/ownership/lifecycle slice, current UTC boundary
 instruction, retained Admin duration control and explicit external/integration gates.
+
+## Phase07 catalog publication decision
+
+[0011 — permission-bound catalog publication](0011-catalog-publication.md) records
+manual-first immutable candidates, independently evidenced source permissions,
+exact-version human approval, current-permission public reads and explicit
+search/deadline limits. No live source adapter or real-source approval is inferred.

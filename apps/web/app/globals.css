@@ -32,3 +32,26 @@ input { padding: .75rem; font: inherit; border: 1px solid #6b807a; border-radius
 .account-tabs button[aria-pressed="true"] { outline: 3px solid #13766a; outline-offset: 2px; }
 .confirm { display: flex; align-items: center; }
 input:focus-visible { outline: 3px solid #13766a; outline-offset: 2px; }
+.catalog-main { max-width: 70rem; }
+.catalog-main nav, .catalog-actions, .catalog-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.catalog-grid, .catalog-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1rem; }
+.catalog-fields label { margin-block: .25rem; }
+.catalog-main select, .catalog-main textarea { width: 100%; padding: .7rem; font: inherit; color: var(--text); border: 1px solid #6b807a; border-radius: .3rem; background: var(--surface); }
+.catalog-main textarea { min-height: 7rem; resize: vertical; }
+.catalog-main article { min-width: 0; margin-block: .5rem; }
+.catalog-main h2 { line-height: 1.5; }
+.catalog-main dl { display: grid; grid-template-columns: minmax(7rem, 1fr) 3fr; gap: .3rem 1rem; }
+.catalog-main dt { font-weight: 600; }
+.catalog-main dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.catalog-note { padding: .8rem 1rem; background: #eff6f8; border-inline-start: 3px solid var(--action); }
+.catalog-warning { padding: .8rem 1rem; background: #fff7ed; border-inline-start: 3px solid #9a3412; color: #7c2d12; }
+.catalog-badge { display: inline-block; padding: .1rem .5rem; margin-inline-end: .4rem; border: 1px solid #9aa8ac; border-radius: .3rem; font-size: .875rem; }
+.catalog-source { overflow-wrap: anywhere; }
+.catalog-list { padding-inline-start: 1.5rem; }
+.catalog-main pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.catalog-main button.secondary { color: var(--action); background: var(--surface); }
+.catalog-main [aria-busy="true"] { opacity: .75; }
+.catalog-main details { margin-block: 1rem; }
+.catalog-main summary { cursor: pointer; font-weight: 600; }
+.catalog-review-field { display: contents; }
+@media (max-width: 36rem) { .catalog-main dl { grid-template-columns: 1fr; } .catalog-main dd { margin-block-end: .6rem; } }

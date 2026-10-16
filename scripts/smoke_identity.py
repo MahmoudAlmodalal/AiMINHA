@@ -52,7 +52,14 @@ def main() -> None:
 
     try:
         for command in (
-            [sys.executable, "apps/api/manage.py", "runserver", "127.0.0.1:8000", "--noreload"],
+            [
+                sys.executable,
+                "apps/api/manage.py",
+                "runserver",
+                "127.0.0.1:8000",
+                "--noreload",
+                "--nothreading",
+            ],
             ["npm", "run", "start", "--workspace", "@minhaai/web"],
         ):
             processes.append(

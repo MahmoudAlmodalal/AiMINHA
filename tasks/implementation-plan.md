@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phases07–17 and unrelated product backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phases08–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -11,7 +11,7 @@
 | 04 | UX/UI specification | 01–03 | Sitemap, wireframes, tokens, RTL/LTR flows | UI states for loading/error/disabled/consent | PASS |
 | 05 | Workspace/bootstrap | 02–04 | Monorepo scaffolding, local Docker, CI skeleton | Bootable app/API, CI/lint checks, no secrets | PASS |
 | 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests | PASS |
-| 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | TODO |
+| 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | PASS |
 | 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | TODO |
 | 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | TODO |
 | 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | TODO |
@@ -63,3 +63,23 @@ remain unauthorized and were not performed.
 - Agent A: catalog + deterministic matching, Agent B: credits + AI adapters, Agent C: UI components + translated flows, Agent D: test fixtures + integration tests.
 - Avoid agents editing the same files or migrations simultaneously; single integrator owns merges and phase pass criteria.
 - Never parallelize unagreed contracts, schema migrations, security policies, and credit settlement logic.
+
+
+## Phase07 execution state — 2026-10-16
+
+**07: PASS — LOCAL_CATALOG_PUBLICATION_GATE.** Permission-bound source revisions,
+manual/approved structured proposals, immutable candidate facts and exact-version
+human approval/audit now back the public bilingual catalog and PostgreSQL FTS.
+Current source revision/status/expiry, review and publication must agree; imports
+and edits never auto-publish, restoration returns to review and internal notes
+stay private. Fresh PostgreSQL migrations, 139 API tests (70 catalog) plus eight
+client tests, static/types/contracts/build and actual HTTP catalog/identity checks
+passed. The earlier proxy HTTP500 recurred and was narrowed to Next upstream
+ECONNRESET; a documented local Connection:close development-server workaround
+passed consecutive-request and identity checks. It is not production reliability
+certification. No real source/MFA/legal approval, live fetch/monitor/report workflow,
+semantic quality or release readiness is inferred. See [report07](phase-reports/07.md)
+and [scope](../docs/specs/phase-07-catalog.md). Only Phase07's current outcome changes;
+Phase08–17 and earlier outcomes are preserved. The user explicitly requested a GitHub
+push after completion; deployment, paid resources and provider calls remain outside
+scope.

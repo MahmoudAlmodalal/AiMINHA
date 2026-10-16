@@ -1,5 +1,6 @@
 import createClient from "openapi-fetch";
 import type { paths, components } from "./generated.js";
+export type { components } from "./generated.js";
 
 export type Health = components["schemas"]["Health"];
 export type Problem = components["schemas"]["Problem"];

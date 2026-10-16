@@ -26,7 +26,14 @@ def main() -> None:
     processes: list[subprocess.Popen[bytes]] = []
     try:
         for command in (
-            [sys.executable, "apps/api/manage.py", "runserver", "127.0.0.1:8000", "--noreload"],
+            [
+                sys.executable,
+                "apps/api/manage.py",
+                "runserver",
+                "127.0.0.1:8000",
+                "--noreload",
+                "--nothreading",
+            ],
             ["npm", "run", "dev"],
         ):
             processes.append(subprocess.Popen(command, cwd=ROOT, start_new_session=True))

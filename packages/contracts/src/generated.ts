@@ -68,6 +68,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/scholarships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogCandidates"];
+        put?: never;
+        post: operations["createCatalogCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scholarships/{scholarship_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCatalogCandidate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scholarships/{scholarship_id}/moderation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["moderateCatalogCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scholarships/{scholarship_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reviseCatalogCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogSources"];
+        put?: never;
+        post: operations["createCatalogSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/sources/{source_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reviseCatalogSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/email-verification-requests": {
         parameters: {
             query?: never;
@@ -261,6 +357,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scholarships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["searchScholarships"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scholarships/{scholarship_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getScholarship"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/session": {
         parameters: {
             query?: never;
@@ -382,11 +510,97 @@ export interface components {
             /** Format: uuid */
             correlation_id: string;
         };
+        /**
+         * @description * `APPROVE` - APPROVE
+         *     * `REJECT` - REJECT
+         *     * `REVERIFY` - REVERIFY
+         *     * `SUSPEND` - SUSPEND
+         *     * `ARCHIVE` - ARCHIVE
+         *     * `RESTORE` - RESTORE
+         * @enum {string}
+         */
+        ActionEnum: "APPROVE" | "REJECT" | "REVERIFY" | "SUSPEND" | "ARCHIVE" | "RESTORE";
+        AdminPage: {
+            items: components["schemas"]["AdminScholarship"][];
+            total: number;
+            page: number;
+            page_size: number;
+        };
+        AdminScholarship: {
+            /** Format: uuid */
+            id: string;
+            revision: number;
+            visibility: components["schemas"]["VisibilityEnum"];
+            /** Format: uuid */
+            published_version_id: string | null;
+            latest: components["schemas"]["Candidate"];
+            versions: components["schemas"]["Candidate"][];
+            history: components["schemas"]["ModerationEvent"][];
+        };
         Authorization: {
             /** Format: uri */
             authorization_url: string;
             /** Format: date-time */
             expires_at: string;
+        };
+        Candidate: {
+            /** Format: uuid */
+            source_id: string;
+            title: string;
+            provider: string;
+            summary: string;
+            education_levels: components["schemas"]["EducationLevelsEnum"][];
+            disciplines: string[];
+            countries: string[];
+            languages: string[];
+            funding: components["schemas"]["FundingEnum"];
+            criteria: string[];
+            required_documents: string[];
+            /** Format: uri */
+            submission_url: string | null;
+            rounds: components["schemas"]["PublicRound"][];
+            /** Format: date-time */
+            source_checked_at: string | null;
+            internal_notes: string;
+            origin: components["schemas"]["OriginEnum"];
+            reason: string;
+            /** Format: uuid */
+            id: string;
+            version: number;
+            /** Format: uuid */
+            source_revision_id: string;
+            content_hash: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uuid */
+            created_by: string;
+            duplicate_ids: string[];
+        };
+        CandidateInputRequest: {
+            /** Format: uuid */
+            source_id: string;
+            title: string;
+            provider: string;
+            /** @default  */
+            summary: string;
+            education_levels?: components["schemas"]["EducationLevelsEnum"][];
+            disciplines?: string[];
+            countries?: string[];
+            languages?: string[];
+            /** @default UNKNOWN */
+            funding: components["schemas"]["FundingEnum"];
+            criteria?: string[];
+            required_documents?: string[];
+            /** Format: uri */
+            submission_url?: string | null;
+            rounds?: components["schemas"]["RoundRequest"][];
+            /** Format: date-time */
+            source_checked_at?: string | null;
+            /** @default  */
+            internal_notes: string;
+            /** @default MANUAL */
+            origin: components["schemas"]["OriginEnum"];
+            reason: string;
         };
         ChallengeRequest: {
             challenge_token: string;
@@ -468,6 +682,13 @@ export interface components {
             items: components["schemas"]["Disclosure"][];
             next_cursor: string | null;
         };
+        /**
+         * @description * `BACHELOR` - BACHELOR
+         *     * `MASTER` - MASTER
+         *     * `PHD` - PHD
+         * @enum {string}
+         */
+        EducationLevelsEnum: "BACHELOR" | "MASTER" | "PHD";
         EmailRequest: {
             /** Format: email */
             email: string;
@@ -499,6 +720,22 @@ export interface components {
          * @enum {string}
          */
         FileStateEnum: "INITIATED" | "QUARANTINED" | "SCANNING" | "ACCEPTED" | "REJECTED" | "PURGE_PENDING" | "PURGED";
+        /**
+         * @description * `CURRENT` - CURRENT
+         *     * `STALE` - STALE
+         *     * `UNKNOWN` - UNKNOWN
+         * @enum {string}
+         */
+        FreshnessEnum: "CURRENT" | "STALE" | "UNKNOWN";
+        /**
+         * @description * `FULL` - FULL
+         *     * `PARTIAL` - PARTIAL
+         *     * `WAIVER` - WAIVER
+         *     * `AID` - AID
+         *     * `UNKNOWN` - UNKNOWN
+         * @enum {string}
+         */
+        FundingEnum: "FULL" | "PARTIAL" | "WAIVER" | "AID" | "UNKNOWN";
         GoogleCallbackRequest: {
             code: string;
             state: string;
@@ -516,6 +753,14 @@ export interface components {
          */
         IntentEnum: "SIGN_IN" | "LINK";
         /**
+         * @description * `UNKNOWN` - UNKNOWN
+         *     * `ROLLING` - ROLLING
+         *     * `DATE_ONLY` - DATE_ONLY
+         *     * `CONFIRMED` - CONFIRMED
+         * @enum {string}
+         */
+        KindEnum: "UNKNOWN" | "ROLLING" | "DATE_ONLY" | "CONFIRMED";
+        /**
          * @description * `ar` - ar
          *     * `en` - en
          * @enum {string}
@@ -526,6 +771,30 @@ export interface components {
             email: string;
             password: string;
         };
+        ModerationEvent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            version_id: string;
+            action: string;
+            reason: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ModerationRequest: {
+            /** Format: uuid */
+            version_id: string;
+            action: components["schemas"]["ActionEnum"];
+            reason: string;
+        };
+        /**
+         * @description * `MANUAL` - MANUAL
+         *     * `IMPORT` - IMPORT
+         * @enum {string}
+         */
+        OriginEnum: "MANUAL" | "IMPORT";
         PasswordRequest: {
             password: string;
         };
@@ -533,6 +802,14 @@ export interface components {
             challenge_token: string;
             password: string;
         };
+        /**
+         * @description * `UNVERIFIED` - UNVERIFIED
+         *     * `APPROVED` - APPROVED
+         *     * `BLOCKED` - BLOCKED
+         *     * `REVOKED` - REVOKED
+         * @enum {string}
+         */
+        PermissionStatusEnum: "UNVERIFIED" | "APPROVED" | "BLOCKED" | "REVOKED";
         Problem: {
             /** Format: uri */
             type: string;
@@ -545,6 +822,50 @@ export interface components {
             field_errors?: components["schemas"]["FieldError"][];
             retry_after_seconds?: number;
         };
+        PublicPage: {
+            items: components["schemas"]["PublicScholarship"][];
+            total: number;
+            page: number;
+            page_size: number;
+            search_mode: components["schemas"]["SearchModeEnum"];
+        };
+        PublicRound: {
+            kind: components["schemas"]["KindEnum"];
+            label: string;
+            source_text: string;
+            closes_at: string | null;
+            deadline_date: string | null;
+            timezone: string | null;
+        };
+        PublicScholarship: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            version_id: string;
+            version: number;
+            title: string;
+            provider: string;
+            summary: string;
+            education_levels: string[];
+            disciplines: string[];
+            countries: string[];
+            languages: string[];
+            funding: components["schemas"]["FundingEnum"];
+            criteria: string[];
+            required_documents: string[];
+            /** Format: uri */
+            submission_url: string | null;
+            source: components["schemas"]["SourceCitation"];
+            /** Format: date-time */
+            source_checked_at: string | null;
+            /** Format: date-time */
+            verified_at: string;
+            freshness: components["schemas"]["FreshnessEnum"];
+            rounds: components["schemas"]["PublicRound"][];
+            /** Format: date-time */
+            next_deadline: string | null;
+            reminder_eligible: boolean;
+        };
         Reauthentication: {
             reauthentication_token: string;
         };
@@ -554,6 +875,21 @@ export interface components {
          * @enum {string}
          */
         RolesEnum: "STUDENT" | "ADMIN";
+        RoundRequest: {
+            kind: components["schemas"]["KindEnum"];
+            /** @default  */
+            label: string;
+            /** @default  */
+            source_text: string;
+            closes_at?: string | null;
+            deadline_date?: string | null;
+            timezone?: string | null;
+        };
+        /**
+         * @description * `TEXT` - TEXT
+         * @enum {string}
+         */
+        SearchModeEnum: "TEXT";
         Session: {
             /** Format: uuid */
             actor_id: string;
@@ -580,11 +916,78 @@ export interface components {
             birth_date: string;
             locale: components["schemas"]["LocaleEnum"];
         };
+        Source: {
+            name: string;
+            /** Format: uri */
+            url: string;
+            permission_status: components["schemas"]["PermissionStatusEnum"];
+            license_basis: string;
+            permission_evidence: string;
+            /** Format: date-time */
+            date_checked: string | null;
+            /** Format: date-time */
+            valid_until: string | null;
+            allow_manual: boolean;
+            allow_import: boolean;
+            freshness_days: number | null;
+            reason: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            version_id: string;
+            revision: number;
+            /** Format: uuid */
+            editor_id: string;
+            automation_enabled: boolean;
+        };
+        SourceCitation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            version_id: string;
+            name: string;
+            /** Format: uri */
+            url: string;
+        };
+        SourceInputRequest: {
+            name: string;
+            /** Format: uri */
+            url: string;
+            /** @default UNVERIFIED */
+            permission_status: components["schemas"]["PermissionStatusEnum"];
+            /** @default  */
+            license_basis: string;
+            /** @default  */
+            permission_evidence: string;
+            /** Format: date-time */
+            date_checked?: string | null;
+            /** Format: date-time */
+            valid_until?: string | null;
+            /** @default true */
+            allow_manual: boolean;
+            /** @default false */
+            allow_import: boolean;
+            freshness_days?: number | null;
+            reason: string;
+        };
+        SourcePage: {
+            items: components["schemas"]["Source"][];
+        };
         /**
          * @description * `ok` - ok
          * @enum {string}
          */
         StatusEnum: "ok";
+        /**
+         * @description * `DRAFT` - DRAFT
+         *     * `PUBLISHED` - PUBLISHED
+         *     * `REVERIFY` - REVERIFY
+         *     * `SUSPENDED` - SUSPENDED
+         *     * `ARCHIVED` - ARCHIVED
+         *     * `REJECTED` - REJECTED
+         * @enum {string}
+         */
+        VisibilityEnum: "DRAFT" | "PUBLISHED" | "REVERIFY" | "SUSPENDED" | "ARCHIVED" | "REJECTED";
     };
     responses: never;
     parameters: never;
@@ -880,6 +1283,738 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listCatalogCandidates: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                /**
+                 * @description * `DRAFT` - DRAFT
+                 *     * `PUBLISHED` - PUBLISHED
+                 *     * `REVERIFY` - REVERIFY
+                 *     * `SUSPENDED` - SUSPENDED
+                 *     * `ARCHIVED` - ARCHIVED
+                 *     * `REJECTED` - REJECTED
+                 */
+                visibility?: "DRAFT" | "PUBLISHED" | "REVERIFY" | "SUSPENDED" | "ARCHIVED" | "REJECTED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPage"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createCatalogCandidate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-CSRFToken": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CandidateInputRequest"];
+                "multipart/form-data": components["schemas"]["CandidateInputRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminScholarship"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCatalogCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scholarship_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminScholarship"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    moderateCatalogCandidate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                "X-CSRFToken": string;
+            };
+            path: {
+                scholarship_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ModerationRequest"];
+                "multipart/form-data": components["schemas"]["ModerationRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminScholarship"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reviseCatalogCandidate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                "X-CSRFToken": string;
+            };
+            path: {
+                scholarship_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CandidateInputRequest"];
+                "multipart/form-data": components["schemas"]["CandidateInputRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminScholarship"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listCatalogSources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePage"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createCatalogSource: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-CSRFToken": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SourceInputRequest"];
+                "multipart/form-data": components["schemas"]["SourceInputRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Source"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reviseCatalogSource: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                "X-CSRFToken": string;
+            };
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SourceInputRequest"];
+                "multipart/form-data": components["schemas"]["SourceInputRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Source"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1941,6 +3076,207 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    searchScholarships: {
+        parameters: {
+            query?: {
+                country?: string;
+                deadline_before?: string;
+                discipline?: string;
+                /**
+                 * @description * `BACHELOR` - BACHELOR
+                 *     * `MASTER` - MASTER
+                 *     * `PHD` - PHD
+                 */
+                education_level?: "BACHELOR" | "MASTER" | "PHD";
+                /**
+                 * @description * `FULL` - FULL
+                 *     * `PARTIAL` - PARTIAL
+                 *     * `WAIVER` - WAIVER
+                 *     * `AID` - AID
+                 *     * `UNKNOWN` - UNKNOWN
+                 */
+                funding?: "FULL" | "PARTIAL" | "WAIVER" | "AID" | "UNKNOWN";
+                language?: string;
+                /**
+                 * @description * `TEXT` - TEXT
+                 *     * `SEMANTIC` - SEMANTIC
+                 */
+                mode?: "TEXT" | "SEMANTIC";
+                page?: number;
+                page_size?: number;
+                q?: string;
+                /**
+                 * @description * `recent` - recent
+                 *     * `deadline` - deadline
+                 *     * `relevance` - relevance
+                 */
+                sort?: "recent" | "deadline" | "relevance";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicPage"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getScholarship: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scholarship_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicScholarship"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
                 };
             };
         };

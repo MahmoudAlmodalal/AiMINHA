@@ -32,6 +32,7 @@ def main() -> None:
             "runserver",
             "127.0.0.1:8000",
             "--noreload",
+            "--nothreading",
         ]
         if options.liveness_only:
             # The identical Django WSGI application, without runserver's database preflight.
@@ -41,7 +42,7 @@ def main() -> None:
                 "import sys; sys.path.insert(0, 'apps/api'); "
                 "from config.wsgi import application; "
                 "from django.core.servers.basehttp import run; "
-                "run('127.0.0.1', 8000, application, threading=True)",
+                "run('127.0.0.1', 8000, application, threading=False)",
             ]
         for command in (
             api_command,

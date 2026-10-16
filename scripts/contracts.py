@@ -62,10 +62,18 @@ def validate(document: dict[str, Any]) -> None:
         "/api/v1/files/{file_id}",
         "/api/v1/tickets/{ticket_id}/attachments",
         "/api/v1/tickets/{ticket_id}/attachments/{attachment_id}",
+        "/api/v1/scholarships",
+        "/api/v1/scholarships/{scholarship_id}",
+        "/api/v1/admin/sources",
+        "/api/v1/admin/sources/{source_id}/versions",
+        "/api/v1/admin/scholarships",
+        "/api/v1/admin/scholarships/{scholarship_id}",
+        "/api/v1/admin/scholarships/{scholarship_id}/versions",
+        "/api/v1/admin/scholarships/{scholarship_id}/moderation",
     }
     if set(document["paths"]) != authorized:
         raise ValueError(
-            "Only the Phase 05 health and Phase 06 identity/privacy routes are authorized."
+            "Only Phase 05–07 health, identity/privacy and catalog routes are authorized."
         )
     if set(document["paths"]["/api/v1/health"]) != {"get"}:
         raise ValueError("Health must expose only the safe GET contract.")
