@@ -16,3 +16,9 @@ ADRs are **DOCUMENTED WORKING DESIGN / ASSUMPTION**, reconciled to the supplied 
 ## Phase 05 bootstrap decision
 
 [0009 — implemented runtime schema](0009-bootstrap-runtime-contract.md) records the owner-confirmed runtime subset and architecture compatibility checks. Prior architecture decisions remain design guidance; this phase implements only the bootstrap surface.
+
+## Phase06 identity and privacy decision
+
+[0010 — identity/privacy boundaries](0010-identity-privacy-boundaries.md) records
+the implemented local auth/consent/ownership/lifecycle slice, current UTC boundary
+instruction, retained Admin duration control and explicit external/integration gates.

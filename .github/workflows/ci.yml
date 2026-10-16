@@ -44,3 +44,5 @@ jobs:
         run: make build
       - name: Real HTTP startup and worker preflight
         run: make smoke worker-check
+      - name: Identity, local verification mail and account UI HTTP flow
+        run: make smoke-identity secrets

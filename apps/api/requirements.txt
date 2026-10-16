@@ -29,3 +29,15 @@ ruff==0.17.1
 sqlparse==0.6.0
 typing-extensions==4.16.0
 uritemplate==4.2.0
+# Phase06 OAuth verification: resolved/installed closure; existing pins preserved.
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.5.2
+cryptography==50.0.2
+google-auth[requests]==2.62.0
+idna==3.20
+pyasn1==0.6.4
+pyasn1-modules==0.4.2
+pycparser==3.11
+requests==2.34.2
+urllib3==2.8.0

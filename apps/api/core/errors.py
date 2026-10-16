@@ -48,6 +48,8 @@ def problem(request: HttpRequest, status: int, code: str, title: str) -> HttpRes
 
 
 def exception_handler(exc: Exception, context: dict[str, Any]) -> Response:
+    from identity.security import IdentityError
+
     response = drf_exception_handler(exc, context)
     status = response.status_code if response is not None else 500
     codes = {
@@ -60,6 +62,8 @@ def exception_handler(exc: Exception, context: dict[str, Any]) -> Response:
         429: ("RATE_LIMITED", "Too many requests"),
     }
     code, title = codes.get(status, ("INTERNAL_ERROR", "Request could not be completed"))
+    if isinstance(exc, IdentityError):
+        code, title = exc.code, exc.safe_title
     headers = dict(response.items()) if response is not None else {}
     return Response(
         problem_data(context.get("request"), status, code, title),
@@ -70,6 +74,28 @@ def exception_handler(exc: Exception, context: dict[str, Any]) -> Response:
 
 
 def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
+    if request.path.startswith(
+        (
+            "/api/v1/auth/",
+            "/api/v1/session/",
+            "/api/v1/account/",
+            "/api/v1/files",
+            "/api/v1/consents",
+            "/api/v1/tickets/",
+        )
+    ):
+        from identity.security import audit
+
+        try:
+            audit(
+                getattr(request, "user", None),
+                "csrf_verification",
+                "DENY",
+                reason="CSRF_FAILED",
+                correlation=getattr(request, "correlation_id", None),
+            )
+        except Exception:
+            return problem(request, 503, "AUDIT_UNAVAILABLE", "Request could not be safely audited")
     return problem(request, 403, "CSRF_FAILED", "Request verification failed")
 
 

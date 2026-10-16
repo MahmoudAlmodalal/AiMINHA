@@ -1,6 +1,6 @@
 # MinhaAI
 
-Phase 05 provides local Next.js/TypeScript and Django/DRF scaffolding with PostgreSQL, a generated health client and baseline CI. Arabic RTL and English LTR placeholders are available. Product features, identity, AI, uploads, payments, ingestion and durable job execution await their named phases. No real student data or external credentials are needed.
+The Phase05 baseline now includes Phase06 identity and privacy flows: local email verification, verified adult sessions, versioned consent, guarded account recovery and private-resource permissions. Arabic RTL and English LTR account pages are available. Catalog data, AI, uploads, payments, ingestion and durable job execution await their named phases. Use synthetic accounts locally; real-user release approvals remain external gates.
 
 ## Local setup
 
@@ -48,7 +48,7 @@ Development uses one browser origin: Next forwards `/api/*` to Django. There is 
 
 Errors use safe `application/problem+json` with server-generated correlation IDs. API logs contain only event, status and correlation ID, without URL/query, request body, cookies or exception contents. API responses are no-store. These logs are not the future append-only domain audit ledger. Next telemetry is disabled in all provided run scripts; no tracking/font service is used. New DRF endpoints deny access by default.
 
-[CI](.github/workflows/ci.yml) runs the checks, migrations, build and HTTP smoke on an ephemeral PostgreSQL service with public test-only credentials. No repository secrets, deployment or paid resources are used. The lightweight secret guard scans tracked/proposed files and the environment template; it is not a full historical secret audit. Remote CI execution requires a later authorized push; local commands are reported in [Phase 05 report](tasks/phase-reports/05.md).
+[CI](.github/workflows/ci.yml) runs the checks, migrations, build and HTTP smoke on an ephemeral PostgreSQL service with public test-only credentials. No repository secrets, deployment or paid resources are used. The lightweight secret guard scans tracked/proposed files and the environment template; it is not a full historical secret audit. Remote CI results are separate from local verification; local commands are reported in the [Phase 05 report](tasks/phase-reports/05.md) and [Phase 06 report](tasks/phase-reports/06.md).
 
 ## Repository and scope
 
@@ -60,4 +60,53 @@ Errors use safe `application/problem+json` with server-generated correlation IDs
 - `docs/source`: actual PRD, owner decision resolution and provider proposal; all present and preserved.
 - `docs/specs`, `docs/architecture`, `docs/adr`, `tasks`: derived specifications, design and phase evidence.
 
-The [Phase 05 scope/traceability](docs/specs/phase-05-bootstrap.md) and [roadmap](tasks/implementation-plan.md) distinguish implemented bootstrap from future design. Legal/privacy/retention, provider/model/data approval, source/site permissions, scanner, backups/restore, hosting, measured quotas/quality and product-owner release signoff remain external gates. No push, deployment, AI call, account activation or paid resource is part of this phase.
+The [Phase 05 scope/traceability](docs/specs/phase-05-bootstrap.md) and [roadmap](tasks/implementation-plan.md) distinguish implemented bootstrap from future design. Legal/privacy/retention, provider/model/data approval, source/site permissions, scanner, backups/restore, hosting, measured quotas/quality and product-owner release signoff remain external gates. No deployment, AI call or paid resource is authorized. Phase06 changes remain local unless a separate push is requested.
+
+## Phase06 local account and privacy verification
+
+After the normal setup/database/migration commands, open `/ar/account` or
+`/en/account`. Register with a synthetic `@example.invalid` address, a strong
+12+ character password and an adult DOB. Default local email delivery writes
+verification messages only under ignored `.local/mail/` (directory0700/files0600).
+Read the latest private message locally and enter its code in the email-verification
+form. Codes are never returned from registration/login APIs or logged. Do not
+commit/attach these messages. Verification resend invalidates prior codes.
+Local mode sends no real email. Nonlocal SMTP configuration and actual delivery
+must be independently configured/verified; no email service is provisioned here.
+
+```sh
+make migrate
+make check
+make build
+make smoke-identity
+.venv/bin/python apps/api/manage.py plan_account_purges       # read-only count
+# --enqueue records due exact-target tasks only; no object is physically erased.
+```
+
+The HTTP identity smoke creates an isolated synthetic local account, reads its
+private local verification message, checks both account pages and actual same-origin
+signup/verify/login/owned-access/403/logout, and prints no credentials. It leaves
+only synthetic DB/mail evidence and stops its servers. PostgreSQL tests cover
+strict18/leap dates, cross-user/admin403, CSRF, session/token revocation, immutable
+audit, exact30-day UTC boundary, policy changes, support shares and concurrency.
+
+Deletion requires a current impact review, password reauthentication and explicit
+confirmation. Default30 means 720 elapsed UTC hours; configurable policy is frozen
+per request and equality is too late to restore. No legal retention approval is
+seeded, so deletion remains unavailable in a default checkout. Tests use synthetic
+approved policy fixtures. An approved envelope is independent evidence, not a
+configuration switch for ordinary Admin. Restore uses an independent one-use
+email proof, never a normal deletion-pending session, and creates no signup grant
+or login session. Personal-AI consent is revoked on deletion and not regranted on
+restore. Actual storage erasure/backup replay remains gated; queued tasks are
+`BLOCKED_STORAGE`, not success receipts.
+
+Google is optional and unavailable without `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+and an exact approved `GOOGLE_REDIRECT_URI` on a trusted web origin. The callback
+page may be `/ar/account` or `/en/account`. Store server credentials only in private
+environment configuration. Existing verified accounts can explicitly link after
+recent password proof; matching email never merges users. New Google-only signup
+is not enabled. Live Google/SMTP/MFA proof was not exercised; real privileged
+Admin operations remain denied without a configured server MFA backend. The role
+matrix, source conflicts and remaining gates are in [Phase06 scope](docs/specs/phase-06-identity-privacy.md)
+and [report06](tasks/phase-reports/06.md).

@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05's local bootstrap/runtime gate passed on 2026-10-16; hosted CI results remain separate evidence. Phases06–17 and product implementation backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phases07–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -10,7 +10,7 @@
 | 03 | Domain and data model | 02 | DBML/ERD, migrations plan, state machines | Ownership, uniqueness, idempotency & history modeled | PASS |
 | 04 | UX/UI specification | 01–03 | Sitemap, wireframes, tokens, RTL/LTR flows | UI states for loading/error/disabled/consent | PASS |
 | 05 | Workspace/bootstrap | 02–04 | Monorepo scaffolding, local Docker, CI skeleton | Bootable app/API, CI/lint checks, no secrets | PASS |
-| 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests | TODO |
+| 06 | Identity, roles, privacy | 05 | Verified adult auth, roles, consent, isolation | Cross-user 403, age boundary, admin file 403 tests | PASS |
 | 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | TODO |
 | 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | TODO |
 | 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | TODO |
@@ -35,6 +35,21 @@
 - **05: PASS — LOCAL_BOOTSTRAP_GATE, 2026-10-16.** Existing bootstrap preserved and verified on a Docker-capable host using Python3.12/Node22/npm10 and PostgreSQL16.15. A clean local Git clone passed setup, database startup, sessions migration, all 21 API tests plus five client tests, lint/type/schema/migration/secret checks, production build, real HTTP smoke and worker database preflight. Development startup served both locales and the API rewrite, stopped cleanly and left Git clean. The former host-specific PostgreSQL blocker is superseded; hosted CI remains independently unverified until an authorized push/run. See [report05](phase-reports/05.md) and [traceability](../docs/specs/phase-05-bootstrap.md). **06–17: TODO**; all product backlog statuses and prior phase outcomes remain unchanged. The user explicitly requested pushing to AiMINHA; deployment and paid resources remain unauthorized.
 
 ## Release gates that code cannot waive
+
+Phase06 current state, superseding only its TODO at the Phase05 handoff:
+**06: PASS — LOCAL_IDENTITY_PRIVACY_GATE, 2026-10-16.** Canonical verified-adult
+email/password accounts, optional existing-user Google linking boundary, rotating
+sessions, explicit versioned consent, immutable configurable UTC recovery snapshots,
+safe blocked file-purge queue and audited ownership/Admin/support denials are
+implemented. Fresh PostgreSQL verification passed 69 backend tests, eight client
+tests, static/types/schema/migrations/build and real bilingual identity HTTP flow.
+Live SMTP/Google/MFA, legal approvals, object erasure/backups and full production
+RLS remain gated. One non-reproduced HTTP500 remains a documented reliability
+follow-up; it was not seen in the final fresh-database flow. See [report06](phase-reports/06.md)
+and [scope](../docs/specs/phase-06-identity-privacy.md). No Phase07–17 outcome changed;
+the subsequent explicit `Push` instruction authorizes committing and publishing
+this bounded Phase06 change only. Deployment, paid resources and provider calls
+remain unauthorized and were not performed.
 
 - `EXTERNAL_GATE`: hosting terms support the intended use; Vercel Hobby non-commercial constraint must be checked before a commercial/public SaaS deployment.
 - `EXTERNAL_GATE`: AI providers/models/data classes individually approved for private data; otherwise keep private AI disabled.

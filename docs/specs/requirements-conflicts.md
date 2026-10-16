@@ -17,3 +17,17 @@
 Historical reports initially marked source missing/Phase01 unexecuted. Those were true at the initial runs, superseded by current inventory and completion reports; no historical failure is presented as a present absence. PRD product delivery phases differ from agent prompts 00–17. Latest task authorizes prompts00–02 plus active03 reconciliation, not UX/bootstrap/implementation.
 
 Open external/feature decisions are individually named in missing-inputs.md and mapped to rows in feature-matrix.md. Unapproved academic proof scales, leap-day legal edge, rating scale/warning routes, official-status correction and live provider/source/storage/hosting/legal/quality evidence have explicit fail-closed/Unknown/manual paths. Their absence cannot be disguised by a phase PASS; their test plans exist and runtime tests remain NOT RUN.
+
+## Phase06 runtime dispositions — 2026-10-16
+
+The current user authorizes Phase06 only. Earlier design/source bytes and prior
+phase outcomes are preserved; these dispositions scope the new runtime.
+
+| ID | Conflict/gap | Bounded disposition |
+|---|---|---|
+| C06-01 | Current Phase06 demands exact30-day UTC tests; ADR0008 proposed calendar/Asia-Hebron; UD-001 explicitly retains Admin duration control | Implement default30 elapsed UTC days while retaining immutable, prospectively configurable duration snapshots. The current explicit UTC instruction supersedes only the earlier derived time-basis assumption. Require approved legal bounds; no real legal envelope invented. |
+| C06-02 | Phase06 gate says cross-user403; architecture privacy design proposed404 | Runtime returns403 for foreign/missing private IDs and all staff library requests, with denial audit. No existence-specific private payload is returned. |
+| C06-03 | Legal leap-day age interpretation unresolved | Conservative March1 eligibility for a Feb29 DOB in a non-leap 18th year; Feb28 is denied. Engineering safety rule, not legal approval or government DOB verification. |
+| C06-04 | Architecture lacks deletion impact/reauth/verification-resend/consent-list/share-metadata reads and expects replayable OAuth commands | Add only those Phase06 safety/UI endpoints; keep runtime schema generated and exact-route allowlisted. OAuth uses fresh one-use, session-bound attempts; no generic cached OAuth challenge replay. Existing-user linking/sign-in only; new Google signup and live approvals remain gated. Future architecture reconciliation must retain these explicit constraints. |
+| C06-05 | Full files/support/jobs/credits belong to later phases | Minimal owned object-version/ticket-assignment/share projections and blocked exact-target purge tasks prove Phase06 permission boundaries. No upload/scan/download, ticket workflow, financial grant/settlement, physical purge or durable provider execution is claimed. |
+| C06-06 | Trusted recovery receipt versus network arrival under locks | Accept proof at server time after acquiring the canonical account lock; equality is expired. Pre-lock/client timestamps have no authority. Restore and purge planning serialize on the same account/deletion rows. No promise of durable ingress-time priority across stalled HTTP workers is made. |

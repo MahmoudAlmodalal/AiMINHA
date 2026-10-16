@@ -38,8 +38,35 @@ def compare_shape(
 def validate(document: dict[str, Any]) -> None:
     if document["openapi"] != "3.1.0":
         raise ValueError("Runtime OpenAPI must use the documented 3.1 baseline.")
-    if set(document["paths"]) != {"/api/v1/health"}:
-        raise ValueError("Phase 05 authorizes only the bootstrap health route.")
+    authorized = {
+        "/api/v1/health",
+        "/api/v1/session/csrf",
+        "/api/v1/session/login",
+        "/api/v1/session",
+        "/api/v1/session/logout",
+        "/api/v1/session/reauthentications",
+        "/api/v1/auth/registrations",
+        "/api/v1/auth/email-verifications",
+        "/api/v1/auth/email-verification-requests",
+        "/api/v1/auth/password-reset-requests",
+        "/api/v1/auth/password-resets",
+        "/api/v1/auth/google/authorizations",
+        "/api/v1/auth/google/callbacks",
+        "/api/v1/consents/disclosures",
+        "/api/v1/consents",
+        "/api/v1/account/deletions",
+        "/api/v1/account/deletions/impact",
+        "/api/v1/account/recovery-requests",
+        "/api/v1/account/restorations",
+        "/api/v1/files",
+        "/api/v1/files/{file_id}",
+        "/api/v1/tickets/{ticket_id}/attachments",
+        "/api/v1/tickets/{ticket_id}/attachments/{attachment_id}",
+    }
+    if set(document["paths"]) != authorized:
+        raise ValueError(
+            "Only the Phase 05 health and Phase 06 identity/privacy routes are authorized."
+        )
     if set(document["paths"]["/api/v1/health"]) != {"get"}:
         raise ValueError("Health must expose only the safe GET contract.")
     baseline = json.loads((ROOT / "docs/architecture/openapi.json").read_text())

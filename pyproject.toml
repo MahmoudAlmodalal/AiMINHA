@@ -16,6 +16,7 @@ ignore = ["S101"]
 [tool.ruff.lint.per-file-ignores]
 "scripts/*.py" = ["S603", "S607"] # Fixed local development executables, never request input.
 "scripts/smoke.py" = ["S310"] # Fixed loopback HTTP URLs.
+"scripts/smoke_identity.py" = ["S310"] # Fixed loopback origin; generated UUID route IDs only.
 
 [tool.mypy]
 python_version = "3.12"

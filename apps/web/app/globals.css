@@ -24,3 +24,11 @@ button:disabled { background: #e2e8f0; border-color: #64748b; color: var(--secon
 .skip { position: absolute; inset-inline-start: 1rem; top: -5rem; padding: .75rem; background: white; }
 .skip:focus { top: .5rem; }
 @media (max-width: 48rem) { main { margin: 1.5rem 1rem; padding: 1.5rem; } }
+form, article { margin-block: 1.5rem; padding: 1.25rem; border: 1px solid #bdc9c6; border-radius: .5rem; }
+label { display: grid; gap: .4rem; margin-block: 1rem; }
+input { padding: .75rem; font: inherit; border: 1px solid #6b807a; border-radius: .3rem; max-width: 100%; }
+.account-tabs { display: flex; flex-wrap: wrap; gap: .4rem; }
+.account-tabs button { margin: 0; }
+.account-tabs button[aria-pressed="true"] { outline: 3px solid #13766a; outline-offset: 2px; }
+.confirm { display: flex; align-items: center; }
+input:focus-visible { outline: 3px solid #13766a; outline-offset: 2px; }

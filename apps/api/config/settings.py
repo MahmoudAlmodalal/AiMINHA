@@ -34,11 +34,22 @@ if any(
 ):
     raise ImproperlyConfigured("CSRF origins require HTTPS except explicit local web origins.")
 
-INSTALLED_APPS = ["django.contrib.sessions", "rest_framework", "drf_spectacular", "core"]
+INSTALLED_APPS = [
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "rest_framework",
+    "drf_spectacular",
+    "core",
+    "identity",
+    "privacy",
+]
+AUTH_USER_MODEL = "identity.Account"
 MIDDLEWARE = [
     "core.middleware.RequestMetadataMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.middleware.common.CommonMiddleware",
     "core.middleware.StrictCsrfMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -65,10 +76,40 @@ LANGUAGE_CODE = "ar"
 LANGUAGES = [("ar", "العربية"), ("en", "English")]
 USE_I18N = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 12},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "OPTIONS": {"user_attributes": ["email"]},
+    },
+]
+IDENTITY_RATE_LIMIT = (
+    10  # Engineering default, per operation/IP and normalized identity / 15 minutes.
+)
+EMAIL_BACKEND = (
+    "identity.mail.PrivateLocalMailBackend"
+    if LOCAL
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@minhaai.invalid")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI", "")
 
 # Same browser origin through the web rewrite. No CORS middleware or access grants.
 # Only explicit local mode permits non-Secure cookies for loopback HTTP.
 SESSION_COOKIE_NAME = "minhaai_session_local" if LOCAL else "__Host-minhaai_session"
+SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_NAME = "minhaai_csrf_local" if LOCAL else "__Host-minhaai_csrf"
 SESSION_COOKIE_SECURE = not LOCAL
 CSRF_COOKIE_SECURE = not LOCAL
@@ -89,7 +130,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": ["core.permissions.DenyAll"],
-    "UNAUTHENTICATED_USER": None,
+    "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "EXCEPTION_HANDLER": "core.errors.exception_handler",
 }

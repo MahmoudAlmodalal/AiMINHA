@@ -22,7 +22,7 @@ def test_runtime_problem_contract_matches_architecture():
 def test_unplanned_route_fails_phase_gate():
     schema = runtime_schema()
     schema["paths"]["/api/v1/private"] = {"get": {}}
-    with pytest.raises(ValueError, match="only the bootstrap health"):
+    with pytest.raises(ValueError, match="routes are authorized"):
         contracts.validate(schema)
 
 
