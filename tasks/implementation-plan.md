@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phase10 local mock/egress-denial gate passed; Phases11–17 and unrelated product backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phase10 local mock/egress-denial gate passed; Phase11 local actual-scanner/manual-documents/synthetic-accounting gate passed. Phases12–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -15,7 +15,7 @@
 | 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | PASS |
 | 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | PASS |
 | 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | PASS |
-| 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | TODO |
+| 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | PASS |
 | 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts | TODO |
 | 13 | Support & SLA | 06, 10 | Ticket support, SLA engine, assigned attachments | No private library access, hours/priority tests | TODO |
 | 14 | Chrome extension | 06, 12 | MV3 review-only assisted autofill | No OTP/password access, no auto-submit | TODO |
@@ -156,3 +156,42 @@ performed during local implementation; the user's subsequent explicit `Push`
 instruction authorizes committing and publishing this bounded Phase10 change.
 No deployment, paid resource or real provider request was performed. Only
 Phase10's earlier TODO is superseded; Phase00–09 and11–17 outcomes remain unchanged.
+
+## Phase11 execution state — 2026-10-17
+
+**11: PASS — LOCAL_ACTUAL_SCANNER_MANUAL_DOCUMENTS_SYNTHETIC_ACCOUNTING_GATE.**
+Private bounded uploads and exports reserve quarantine capacity, require actual
+ClamAV success plus strict MIME/content checks, and bind immutable object/scan
+identities before acceptance. Owner/session-scoped expiring byte grants recheck
+current account or assigned explicit ticket shares. Admin library reads remain
+denied and audited. Fenced five-minute attempt recovery retains capacity until
+physical cleanup is proven; no active writer is purged.
+
+The bilingual document workspace supports four manual types, selected language,
+escaped previews, immutable versions, exact approvals, comparison/restore-as-new
+and deterministic private PDF/DOCX retry. Failed export preserves the saved source;
+same-version re-export is free. Local fixed synthetic generation/extraction adds a
+saved artifact/proposal witness before the existing once-only credit settlement.
+Unsupported provider claims never save or charge; uncertain outcomes keep holds.
+
+Local PostgreSQL verification passed633 backend tests including the actual scanner
+opt-in and eight client tests, static/type/schema/migration/secret checks, production
+build, all previous HTTP smokes and the new bilingual actual-scanner export-recovery
+HTTP flow. No real private AI processing or displayed-price authorization is claimed:
+private generation/extraction stays unavailable pending precise consent, approved
+processor/model/region, real transport and domain-quality evidence. Manual input
+remains available.
+
+The filesystem adapter/fence is single-host local infrastructure. Approved durable
+encrypted storage, scanner operations/scheduling, production DB roles/RLS, legal
+erasure/backups, visual/export-quality and release signoff remain external gates.
+Derivative exports are protected from ordinary byte deletion while retained. The
+internal submission snapshot primitive awaits Phase12's authoritative application
+binding; ticket lifecycle remains Phase13. See [report11](phase-reports/11.md),
+[scope](../docs/specs/phase-11-private-files-documents.md) and
+[ADR0015](../docs/adr/0015-private-file-and-document-boundaries.md).
+No commit, push, deployment, paid resource or real provider request was performed.
+Only Phase11's current outcome changes; earlier phases and Phases12–17 are preserved.
+The owner's subsequent explicit `Push` instruction authorizes committing and
+publishing this bounded Phase11 change only. Deployment and paid resources remain
+outside this authorization; Phase12 requires a new instruction.

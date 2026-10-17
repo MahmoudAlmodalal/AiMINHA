@@ -1,5 +1,22 @@
 # Current requirement conflicts and dispositions
 
+## Phase11 runtime dispositions — 2026-10-17
+
+Only the current Phase11 request authorizes this implementation. Sources and
+earlier phase outcomes remain unchanged. See [ADR0015](../adr/0015-private-file-and-document-boundaries.md)
+and [scope](phase-11-private-files-documents.md).
+
+| ID | Conflict/gap | Bounded disposition |
+|---|---|---|
+| C11-01 | Original file caps are TBD; decision OQ-013 gives experimental limits and R16 supplies a decimal-byte assumption | Enforce 5,000,000/file, 10,000,000/owner, 750,000,000/global on measured bytes, counting quarantine/export allocations. Do not claim measured free-host capacity. |
+| C11-02 | The full private object-store processor/region/encryption/erasure approvals are absent | Add an explicitly configured private single-host filesystem adapter with fenced writes and recovery. Default unavailable; approved durable multi-host production storage remains external. No public media URL exists. |
+| C11-03 | Private AI requires precise consent/approvals and Phase10 has no private pipeline/transport | Keep extraction/generation safely unavailable even after generic consent. Manual entry remains available. Fixed server-only synthetic documents/proposals prove saved artifacts and once-only accounting, without processing private inputs. Real price-confirmation/semantic-quality and processor enablement remain gated. |
+| C11-04 | Architecture had no manual-create runtime endpoint, although FR-039/042 require manual editing/fallback | Add owned bounded manual create/version/approval/restore/compare/export contracts and bilingual UI, with generated runtime types. Technical validation never creates owner approval. |
+| C11-05 | Application and support lifecycle belong to later phases | Reuse existing assigned explicit ticket-share projections. Provide only an internal exact immutable approved-version snapshot primitive; authoritative owned application/submission binding remains Phase12. No arbitrary submission HTTP endpoint exists. |
+| C11-06 | Deleting an immutable export's byte asset would make same-version re-export point at a purged object | Protect derivative export assets from ordinary owner byte deletion while documents are retained. Uploaded-file deletion works with confirmed cleanup. Full document deletion/erasure/legal retention remains separately gated, explicitly not claimed. |
+| C11-07 | Process death can leave quota/object uncertainty and converters can produce changing bytes | Capture a five-minute immutable storage lease; fenced cleanup retains capacity until confirmed deletion. Stable PDF/DOCX bytes and exact export intents recover retries without a new AI debit. Production scheduling and multi-host object fencing remain external. |
+| C11-08 | A file extension and scan success do not establish usable/inert content | Require bounded structural parsing after scan, a valid OPC/Word package, and reject active/encrypted/externally linked unsafe subsets. This is a conservative supported subset, not compatibility with every PDF/DOCX or proof that all malware can be detected. |
+
 2026-10-15. **PASS — conflicts identified and bounded; no silent source overrides.** Supplied PRD/decision/provider files are unchanged. Latest [owner directions](../source/2026-10-15-owner-decisions.md) authorize 00–03 documentation and Admin-configurable recovery. [Matrix](feature-matrix.md), [rules](business-rules.md), [gate register](missing-inputs.md) distinguish completed design from unexecuted external evidence.
 
 | ID | Evidence | Current disposition / isolated area |

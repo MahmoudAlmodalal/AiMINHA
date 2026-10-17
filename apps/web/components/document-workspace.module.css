@@ -1,0 +1,16 @@
+.workspace section { margin-block: 2rem; }
+.workspace fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.workspace input:not([type="checkbox"]):not([type="file"]) { width: 100%; }
+.workspace textarea { min-height: 20rem; line-height: 1.8; }
+.library { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.library li { min-width: 0; border: 1px solid #bdc9c6; border-radius: .5rem; padding: 1rem; }
+.library button { margin-block: .25rem; text-align: start; }
+.library button[aria-pressed="true"] { outline: 3px solid #13766a; outline-offset: 2px; }
+.versions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.preview { border: 1px solid #bdc9c6; border-radius: .5rem; padding: 1rem; overflow-wrap: anywhere; }
+.preview pre { white-space: pre-wrap; font: inherit; line-height: 1.8; }
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
+.status { min-height: 1.5rem; }
+.workspace :is(textarea, select, button):focus-visible { outline: 3px solid #13766a; outline-offset: 2px; }
+.workspace .confirm { align-items: flex-start; }
+.workspace .confirm input { flex: 0 0 auto; margin-block-start: .4rem; }

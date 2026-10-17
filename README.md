@@ -283,3 +283,49 @@ No production scheduler, live transport, private processing or provider billing
 test is installed or claimed. See [scope](docs/specs/phase-10-ai-gateway.md),
 [ADR0014](docs/adr/0014-ai-gateway-and-budget-stop.md) and
 [report10](tasks/phase-reports/10.md) for traces and actual validation.
+
+## Phase11 private files and documents
+
+`/{locale}/documents` provides the owned manual CV, motivation letter, personal
+statement and essay workspace in Arabic/English. Content versions and exact owner
+approvals are immutable; restore appends a new version. PDF/DOCX exports use the
+approved saved text and can be retried without a new AI charge. Private extraction
+and AI drafting remain disabled until the scoped processor/consent/transport gates
+are fulfilled. Manual editing is available without a file or AI provider.
+
+Uploads and exported bytes share the same private storage boundary: PDF/DOCX/PNG/JPG,
+5,000,000 bytes/file, 10,000,000/student, 750,000,000 globally. The local adapter has
+no public media URL and rejects web-public roots. It reserves quarantine capacity,
+requires actual ClamAV success for exact bytes plus content validation, and issues
+60-second session-bound grants rechecked at delivery. Staff cannot browse libraries;
+assigned support sees only current explicit ticket attachments with scoped MFA.
+Scanner/storage outage offers manual entry and accepts no file. Ordinary deletion
+of derivative export bytes is protected while their immutable document is retained;
+full legal erasure and production storage remain independent gates.
+
+Storage is disabled by default. For **synthetic local verification only**, configure
+a private directory outside web roots, owned by the API process with mode0700, using
+`PRIVATE_FILES_ROOT` and `PRIVATE_FILES_STORAGE_APPROVED=1`. Provide an actual trusted
+ClamAV daemon through `PRIVATE_FILES_SCANNER_HOST`/`PRIVATE_FILES_SCANNER_PORT`, default
+loopback3310. Use UTC on the scanner host, official signatures no older than seven
+days, bounded scans, encrypted-document/archive alerts and `AlertExceedsMax yes`.
+There is no permissive scanner fallback. Production scanner isolation, persistent
+encrypted storage, regional/legal approval and backups must be verified separately.
+
+```sh
+make migrate lint typecheck contracts-check migrations-check secrets build
+MINHAAI_REAL_SCANNER_TEST=1 .venv/bin/pytest -q
+MINHAAI_LIVE_SCANNER_TEST=1 make smoke-documents
+make files-recover
+```
+
+The two scanner flags require the actual local daemon; normal CI explicitly skips
+unavailable genuine scanner tests and the default HTTP smoke verifies the closed
+storage/manual path. The live HTTP smoke uses its own disposable local database and
+temporary private storage. `make files-recover` removes expired, inactive storage
+attempts only under the physical fence and releases quota only after confirmed
+cleanup; it skips active writers. Schedule it on a suitable trusted worker before
+real operation. This filesystem fence supports a single host, not a distributed
+object-store guarantee. See [scope](docs/specs/phase-11-private-files-documents.md),
+[ADR0015](docs/adr/0015-private-file-and-document-boundaries.md) and
+[report11](tasks/phase-reports/11.md) for exact checks and remaining gates.

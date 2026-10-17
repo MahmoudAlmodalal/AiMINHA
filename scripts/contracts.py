@@ -80,11 +80,28 @@ def validate(document: dict[str, Any]) -> None:
         "/api/v1/operations/{operation_id}",
         "/api/v1/admin/policies/credits",
         "/api/v1/ai/capabilities",
+        "/api/v1/files/capabilities",
+        "/api/v1/files/uploads",
+        "/api/v1/files/{file_id}/access-grants",
+        "/api/v1/files/{file_id}/content",
+        "/api/v1/files/{file_id}/storage",
+        "/api/v1/tickets/{ticket_id}/attachments/{attachment_id}/access-grants",
+        "/api/v1/tickets/{ticket_id}/attachments/{attachment_id}/content",
+        "/api/v1/documents",
+        "/api/v1/documents/capabilities",
+        "/api/v1/documents/generate",
+        "/api/v1/documents/extract",
+        "/api/v1/documents/{document_id}",
+        "/api/v1/documents/{document_id}/versions",
+        "/api/v1/documents/{document_id}/restore",
+        "/api/v1/documents/{document_id}/approvals",
+        "/api/v1/documents/{document_id}/exports",
+        "/api/v1/documents/{document_id}/compare",
     }
     if set(document["paths"]) != authorized:
         raise ValueError(
-            "Only Phase 05–10 health, identity/privacy, catalog, "
-            "eligibility, credit and AI capability routes are authorized."
+            "Only Phase 05–11 health, identity/privacy, catalog, eligibility, "
+            "credit, AI capability, private file and document routes are authorized."
         )
     if set(document["paths"]["/api/v1/health"]) != {"get"}:
         raise ValueError("Health must expose only the safe GET contract.")

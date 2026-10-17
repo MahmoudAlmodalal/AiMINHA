@@ -52,3 +52,5 @@ jobs:
         run: make smoke-eligibility secrets
       - name: Once-only activation grant and private wallet HTTP flow
         run: make smoke-credits credits-timeouts ai-timeouts secrets
+      - name: Private documents, manual fallback and export recovery HTTP flow
+        run: make smoke-documents files-recover secrets

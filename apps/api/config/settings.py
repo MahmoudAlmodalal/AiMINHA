@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     "eligibility",
     "credits",
     "ai_gateway",
+    "private_files",
+    "documents",
 ]
 AUTH_USER_MODEL = "identity.Account"
 MIDDLEWARE = [
@@ -56,6 +58,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "private_files.upload.BoundedUploadMiddleware",
     "core.middleware.StrictCsrfMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -130,6 +133,19 @@ SECURE_HSTS_SECONDS = 0 if LOCAL else 31536000
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
+
+# Phase11: private bytes have no public MEDIA_URL. Storage and real scanning are
+# unavailable unless an operator explicitly configures an approved private root.
+PRIVATE_FILES_ROOT = os.environ.get("PRIVATE_FILES_ROOT", "")
+PRIVATE_FILES_STORAGE_APPROVED = os.environ.get("PRIVATE_FILES_STORAGE_APPROVED") == "1"
+PRIVATE_FILES_SCANNER_HOST = os.environ.get("PRIVATE_FILES_SCANNER_HOST", "127.0.0.1")
+PRIVATE_FILES_SCANNER_PORT = int(os.environ.get("PRIVATE_FILES_SCANNER_PORT", "3310"))
+PRIVATE_FILES_SCANNER_TIMEOUT_SECONDS = 30
+PRIVATE_FILES_SCANNER_MAX_SIGNATURE_AGE_HOURS = 168
+# All supported file sizes use decimal MB, consistent with the existing R16 design.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5_000_000
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5_100_000
+DATA_UPLOAD_MAX_NUMBER_FILES = 1
 CSRF_FAILURE_VIEW = "core.errors.csrf_failure"
 
 REST_FRAMEWORK = {
@@ -143,8 +159,9 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "MinhaAI implemented API",
     "DESCRIPTION": (
-        "Bounded Phase 05–10 runtime: health, identity/privacy, catalog, "
-        "deterministic eligibility, credits and AI capabilities. Live AI execution is unavailable."
+        "Bounded Phase 05–11 runtime: health, identity/privacy, catalog, "
+        "eligibility, credits, private files and versioned documents. "
+        "Live private AI execution is unavailable."
     ),
     "VERSION": "0.1.0",
     "OAS_VERSION": "3.1.0",
@@ -153,6 +170,8 @@ SPECTACULAR_SETTINGS = {
         "EducationLevelEnum": "eligibility.serializers.DEGREES",
         "EligibilityProfileFieldEnum": "eligibility.serializers.FIELDS",
         "CreditEntryKindEnum": "credits.serializers.ENTRY_KINDS",
+        "DocumentKindEnum": "documents.serializers.KINDS",
+        "LocaleEnum": ["ar", "en"],
         "CatalogDeadlineKindEnum": ["UNKNOWN", "ROLLING", "DATE_ONLY", "CONFIRMED"],
     },
     "SERVE_INCLUDE_SCHEMA": False,

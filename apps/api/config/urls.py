@@ -4,6 +4,8 @@ from django.urls import include, path
 urlpatterns = [
     path("api/v1/health", HealthView.as_view(), name="health"),
     path("api/v1/", include("identity.urls")),
+    path("api/v1/", include("private_files.urls")),
+    path("api/v1/", include("documents.urls")),
     path("api/v1/", include("catalog.urls")),
     path("api/v1/", include("eligibility.urls")),
     path("api/v1/", include("credits.urls")),

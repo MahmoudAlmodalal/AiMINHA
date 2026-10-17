@@ -55,3 +55,10 @@ canonical logical admissions, conservative physical quotas, fenced intents,
 bounded retries/circuits and validated saved-result accounting. All real provider
 transports and private processing remain disabled pending independent consent,
 processor, free-capacity, transport, quality and release evidence.
+
+## Phase11 private files and documents decision
+
+[0015 — scanned private bytes and immutable document artifacts](0015-private-file-and-document-boundaries.md)
+records actual scanner admission, backend-authorized private reads, immutable
+document history/approval, recoverable free exports and a distinctly local
+synthetic document/accounting proof. Production storage and private AI remain gated.

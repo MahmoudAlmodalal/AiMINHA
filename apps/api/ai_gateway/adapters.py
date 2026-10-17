@@ -9,8 +9,9 @@ from dataclasses import dataclass, field
 from math import isfinite
 from typing import Protocol
 
-from ai_gateway.validation import AdapterRequest, Classification, build_prompt
 from django.conf import settings
+
+from ai_gateway.validation import AdapterRequest, Classification, build_prompt
 
 
 @dataclass(frozen=True)

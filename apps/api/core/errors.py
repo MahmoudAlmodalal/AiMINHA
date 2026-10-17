@@ -87,6 +87,7 @@ def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
             "/api/v1/eligibility/",
             "/api/v1/wallet",
             "/api/v1/operations",
+            "/api/v1/documents",
         )
     ):
         from identity.security import audit
