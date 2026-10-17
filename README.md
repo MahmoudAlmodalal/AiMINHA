@@ -229,3 +229,57 @@ are a bounded correctness baseline and require profiling before production load.
 See [Phase09 scope](docs/specs/phase-09-credits.md),
 [ADR0013](docs/adr/0013-credits-and-reconciliation.md) and
 [report09](tasks/phase-reports/09.md) for evidence and remaining gates.
+
+## Phase10 AI gateway and budget stop
+
+The backend now has a provider-independent gateway with explicit input
+classification, exact provider/model/data-type/purpose/region approval evidence,
+bounded attempts, a circuit breaker, physical quota reservations and grounded
+output validation. Public text mixed with student data is private; passwords,
+OTPs and prohibited actions are never eligible. A provider name, API key or
+remaining quota does not constitute approval. Existing generic PERSONAL_AI
+consent is insufficient for a provider-specific private processing bundle.
+
+All real transports remain disabled. Cloudflare, Groq, Gemini Free and
+OpenRouter Free adapters return an unavailable result without opening a socket.
+Private data cannot route to Gemini Free, OpenRouter Free or the mock. No real
+approval, free-account guarantee or usage measurement is seeded. The only
+executable adapter is a local server-owned synthetic mock, available to internal
+tests without a public execution endpoint. `GET /api/v1/ai/capabilities` reports
+the closed client gates to verified adult students and exposes no credentials.
+
+The mock orchestrates one existing credit operation, preserving its original
+price, key and canonical global logical admission (default 100 per Hebron day).
+Before each physical attempt, current global stops and a fresh, evidenced,
+free-only quota window must permit its worst-case allocation. Windows are keyed
+by provider/account/unit across models and configs, with explicit UTC boundaries.
+Cloudflare bookkeeping requires Neurons and a maximum experimental ceiling of
+8,000. This ceiling does not establish actual free capacity. A missing, stale,
+unknown or exhausted meter stops dispatch. Immutable baseline snapshots cannot
+be reset or replaced by an overlapping window; live meter ingestion is a future
+approval gate. Unknown calls remain reserved across subsequent windows.
+
+Each committed dispatch intent precedes adapter invocation outside database
+transactions. Attempts default to 10-second leases and at most 2 per config, with
+a hard total of 3 per operation. These are engineering defaults. Known
+not-executed failures may retry within that bound; their physical upper bound is
+conservatively retired, never treated as measured zero usage. Timeout/unknown
+effects retain physical and financial holds and cannot trigger fallback or a
+blind refund. Three failures open the circuit for 30 seconds; only one half-open
+probe may run. No paid upgrade or alternate private processor is available.
+
+Output is a strict local quotation schema, requiring exact known evidence and
+citation IDs with no tools/actions. Unsupported claims are not chargeable
+success. A successful result, saved gateway output and the existing synthetic
+credit settlement proof commit atomically. This is not a real CV/document
+validator, processor consent flow or Arabic/English quality certification.
+
+Run `make db-up migrate check build smoke-credits ai-timeouts` locally. The credit
+HTTP smoke also checks closed AI capabilities. `make ai-timeouts` inspects only;
+`.venv/bin/python apps/api/manage.py mark_ai_timeouts --apply` marks expired
+dispatch intents uncertain without sending, retrying or releasing funds. Run
+the credit timeout marker as well for work that never reached dispatch.
+No production scheduler, live transport, private processing or provider billing
+test is installed or claimed. See [scope](docs/specs/phase-10-ai-gateway.md),
+[ADR0014](docs/adr/0014-ai-gateway-and-budget-stop.md) and
+[report10](tasks/phase-reports/10.md) for traces and actual validation.

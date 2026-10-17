@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phases10–17 and unrelated product backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phase10 local mock/egress-denial gate passed; Phases11–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -14,7 +14,7 @@
 | 07 | Scholarships/catalog | 06 | Public search, admin moderation, source registry | No auto-publish, unverified-date handling | PASS |
 | 08 | Eligibility & matching | 07 | Deterministic rules, coverage/confidence | Mandatory fails cannot be overridden by AI | PASS |
 | 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | PASS |
-| 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | TODO |
+| 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | PASS |
 | 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | TODO |
 | 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts | TODO |
 | 13 | Support & SLA | 06, 10 | Ticket support, SLA engine, assigned attachments | No private library access, hours/priority tests | TODO |
@@ -130,3 +130,29 @@ only Phase09's earlier TODO; Phases00–08 and10–17 outcomes remain unchanged.
 The user's subsequent explicit `ارفع` instruction authorizes committing and
 publishing this bounded Phase09 change only. Deployment and paid resources
 remain unauthorized.
+
+## Phase10 execution state — 2026-10-17
+
+**10: PASS — LOCAL_MOCK_GATE_WITH_LIVE_EGRESS_DISABLED.** Explicit provenance
+classification, exact scoped approval metadata, immutable quota baselines,
+physical reservations, bounded attempts/leases, circuit/half-open controls and
+strict evidence-based synthetic output now orchestrate the existing credit
+kernel. Current global stops are rechecked without recounting logical admissions.
+Unknown effects retain provider and financial holds; SQL and services prevent
+uncertain release, duplicate dispatch and settlement on unsupported/unsaved output.
+
+Fresh27-migration PostgreSQL verification passed523 backend tests (164 new gateway
+cases), eight client tests, static/types/contracts/build, all five HTTP flows and
+worker/credit/AI timeout inspection. The capability API confirms closed client
+execution. Real transports and private processing remain disabled even with a
+configured key or generic consent; precise private consent, vendor terms/free-only
+guarantees/meters, actual domain validation, live worker operations/RLS/load and
+release approvals remain external gates. Immutable meter baselines have no live
+refresh path and go unavailable when stale.
+
+See [report10](phase-reports/10.md), [scope](../docs/specs/phase-10-ai-gateway.md)
+and [ADR0014](../docs/adr/0014-ai-gateway-and-budget-stop.md). No commit or push was
+performed during local implementation; the user's subsequent explicit `Push`
+instruction authorizes committing and publishing this bounded Phase10 change.
+No deployment, paid resource or real provider request was performed. Only
+Phase10's earlier TODO is superseded; Phase00–09 and11–17 outcomes remain unchanged.

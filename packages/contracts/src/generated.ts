@@ -196,6 +196,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAICapabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/email-verification-requests": {
         parameters: {
             query?: never;
@@ -649,6 +665,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AICapabilities: {
+            live_execution_available: boolean;
+            mock_client_execution_available: boolean;
+            classification_required: boolean;
+            allowed_classifications: string[];
+            logical_daily_cap: number;
+            cloudflare_neurons_ceiling: number;
+            reason_codes: string[];
+        };
         Ack: {
             accepted: boolean;
             /** Format: uuid */
@@ -2915,6 +2940,57 @@ export interface operations {
                 };
             };
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getAICapabilities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AICapabilities"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

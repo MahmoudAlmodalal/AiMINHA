@@ -161,6 +161,19 @@ def main() -> None:
         operations = call("/api/v1/operations?page=1&page_size=1")
         if operations["total"] != 0 or operations["items"]:
             raise RuntimeError("Read-only wallet created an operation")
+        capabilities = call("/api/v1/ai/capabilities")
+        if (
+            capabilities["live_execution_available"] is not False
+            or capabilities["mock_client_execution_available"] is not False
+            or capabilities["classification_required"] is not True
+            or capabilities["logical_daily_cap"] != 100
+            or capabilities["cloudflare_neurons_ceiling"] != 8000
+            or set(capabilities["allowed_classifications"])
+            != {"PUBLIC/SYNTHETIC", "STUDENT_PRIVATE", "PROHIBITED"}
+        ):
+            raise RuntimeError("AI capability gates were not closed")
+        call("/api/v1/ai/capabilities", {}, 405)
+        call("/api/v1/ai/capabilities?owner_id=forged", expected=400)
         call("/api/v1/operations", {}, 405)
         call(f"/api/v1/operations/{uuid.uuid4()}", expected=403)
         call(f"/api/v1/wallet?owner_id={session['actor_id']}", expected=400)
@@ -212,7 +225,12 @@ assert Account.objects.filter(pk=value['id'], email=value['email']).update(role=
         admin = call("/api/v1/session/login", {"email": email, "password": password})
         if admin["roles"] != ["ADMIN"]:
             raise RuntimeError("Synthetic Admin fixture was not activated")
-        for path in ("/api/v1/wallet", "/api/v1/wallet/entries", "/api/v1/operations"):
+        for path in (
+            "/api/v1/wallet",
+            "/api/v1/wallet/entries",
+            "/api/v1/operations",
+            "/api/v1/ai/capabilities",
+        ):
             call(path, expected=403)
         call(f"/api/v1/operations/{uuid.uuid4()}", expected=403)
         call("/api/v1/session/logout", {}, 204)
@@ -220,7 +238,7 @@ assert Account.objects.filter(pk=value['id'], email=value['email']).update(role=
         print(
             "Credit HTTP smoke passed: bilingual wallet, verified adult once-only 30 grant, "
             "daily spend cap/prices, free reads, private ledger, denied execution/selection, "
-            "Admin denial and logout; no credentials or provider calls."
+            "Admin denial, closed AI capabilities and logout; no credentials or provider calls."
         )
     finally:
         stop(processes)

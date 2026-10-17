@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "catalog",
     "eligibility",
     "credits",
+    "ai_gateway",
 ]
 AUTH_USER_MODEL = "identity.Account"
 MIDDLEWARE = [
@@ -142,8 +143,8 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "MinhaAI implemented API",
     "DESCRIPTION": (
-        "Bounded Phase 05–09 runtime: health, identity/privacy, catalog, "
-        "deterministic eligibility and credits. Provider execution is unavailable."
+        "Bounded Phase 05–10 runtime: health, identity/privacy, catalog, "
+        "deterministic eligibility, credits and AI capabilities. Live AI execution is unavailable."
     ),
     "VERSION": "0.1.0",
     "OAS_VERSION": "3.1.0",

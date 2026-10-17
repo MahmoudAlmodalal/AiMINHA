@@ -347,6 +347,29 @@ def mark_expired(operation_id: Any, now: datetime | None = None) -> Operation:
     return op
 
 
+def lock_for_gateway(
+    owner_id: Any, operation_id: Any, *, active: bool = True
+) -> tuple[Account, Operation]:
+    """Integration boundary; caller must own an atomic block and preserve lock order."""
+    if not transaction.get_connection().in_atomic_block:
+        raise RuntimeError("Gateway accounting requires a transaction")
+    user = owner_lock(owner_id, active=active)
+    head_lock()
+    op, _, _ = operation_lock(user, operation_id)
+    return user, op
+
+
+@transaction.atomic
+def reconcile_system(operation_id: Any) -> Operation:
+    """Conservative system marker after uncertain dispatch, including revoked accounts.
+
+    This integration can only retain funds. It cannot debit, release or resend.
+    """
+    owner_id = Operation.objects.filter(pk=operation_id).values_list("owner_id", flat=True).first()
+    _, op = lock_for_gateway(owner_id, operation_id, active=False)
+    return _reconcile(op, timezone.now())
+
+
 @transaction.atomic
 def publish_policy(
     actor: Account,

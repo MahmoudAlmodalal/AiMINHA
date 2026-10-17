@@ -51,4 +51,4 @@ jobs:
       - name: Private eligibility profile and uncertainty HTTP flow
         run: make smoke-eligibility secrets
       - name: Once-only activation grant and private wallet HTTP flow
-        run: make smoke-credits credits-timeouts secrets
+        run: make smoke-credits credits-timeouts ai-timeouts secrets

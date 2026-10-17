@@ -7,6 +7,7 @@ urlpatterns = [
     path("api/v1/", include("catalog.urls")),
     path("api/v1/", include("eligibility.urls")),
     path("api/v1/", include("credits.urls")),
+    path("api/v1/", include("ai_gateway.urls")),
 ]
 handler400 = "core.errors.bad_request"
 handler403 = "core.errors.forbidden"

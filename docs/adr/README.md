@@ -46,3 +46,12 @@ Asia/Hebron spend/admission days, atomic synthetic output accounting and retaine
 uncertain holds. Real execution/price authorization, provider/domain validation,
 manual adjustments, final erasure and production-scale scan performance remain
 separately gated.
+
+## Phase10 AI gateway decision
+
+[0014 — classified gateway and budget stop](0014-ai-gateway-and-budget-stop.md)
+records the LOCAL synthetic mock, exact classification/approval metadata,
+canonical logical admissions, conservative physical quotas, fenced intents,
+bounded retries/circuits and validated saved-result accounting. All real provider
+transports and private processing remain disabled pending independent consent,
+processor, free-capacity, transport, quality and release evidence.

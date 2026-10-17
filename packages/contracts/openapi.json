@@ -3,7 +3,7 @@
   "info": {
     "title": "MinhaAI implemented API",
     "version": "0.1.0",
-    "description": "Bounded Phase 05–09 runtime: health, identity/privacy, catalog, deterministic eligibility and credits. Provider execution is unavailable."
+    "description": "Bounded Phase 05–10 runtime: health, identity/privacy, catalog, deterministic eligibility, credits and AI capabilities. Live AI execution is unavailable."
   },
   "paths": {
     "/api/v1/account/deletions": {
@@ -2083,6 +2083,71 @@
             "description": ""
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/ai/capabilities": {
+      "get": {
+        "operationId": "getAICapabilities",
+        "tags": [
+          "ai"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AICapabilities"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
             "content": {
               "application/json": {
                 "schema": {
@@ -5666,6 +5731,50 @@
   },
   "components": {
     "schemas": {
+      "AICapabilities": {
+        "type": "object",
+        "properties": {
+          "live_execution_available": {
+            "type": "boolean"
+          },
+          "mock_client_execution_available": {
+            "type": "boolean"
+          },
+          "classification_required": {
+            "type": "boolean"
+          },
+          "allowed_classifications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "logical_daily_cap": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cloudflare_neurons_ceiling": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reason_codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "allowed_classifications",
+          "classification_required",
+          "cloudflare_neurons_ceiling",
+          "live_execution_available",
+          "logical_daily_cap",
+          "mock_client_execution_available",
+          "reason_codes"
+        ],
+        "additionalProperties": false
+      },
       "Ack": {
         "type": "object",
         "properties": {
