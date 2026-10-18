@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phase10 local mock/egress-denial gate passed; Phase11 local actual-scanner/manual-documents/synthetic-accounting gate passed. Phases12–17 and unrelated product backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phase10 local mock/egress-denial gate passed; Phase11 local actual-scanner/manual-documents/synthetic-accounting gate passed; Phase12 local application-history/frozen-evidence/confirmed-deadline-inbox gate passed. Phases13–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -16,7 +16,7 @@
 | 09 | Credits & operations | 06 | Grant, ledger, limits, reconciliation | Concurrency/idempotency, no double charge/grant | PASS |
 | 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | PASS |
 | 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | PASS |
-| 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts | TODO |
+| 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts | PASS |
 | 13 | Support & SLA | 06, 10 | Ticket support, SLA engine, assigned attachments | No private library access, hours/priority tests | TODO |
 | 14 | Chrome extension | 06, 12 | MV3 review-only assisted autofill | No OTP/password access, no auto-submit | TODO |
 | 15 | Admin & operations UI | 07–14 | Moderation, configurable limits, audit, flags | Admin privilege boundaries audited | TODO |
@@ -195,3 +195,39 @@ Only Phase11's current outcome changes; earlier phases and Phases12–17 are pre
 The owner's subsequent explicit `Push` instruction authorizes committing and
 publishing this bounded Phase11 change only. Deployment and paid resources remain
 outside this authorization; Phase12 requires a new instruction.
+
+## Phase12 execution state — 2026-10-17
+
+**12: PASS — LOCAL_APPLICATION_HISTORY_FROZEN_EVIDENCE_CONFIRMED_DEADLINE_INBOX_GATE.**
+Owned saved scholarships and distinct reviewed-round applications now have explicit
+authorized transitions, immutable student-reported history, separate official-status
+evidence and exact submitted document/upload manifests. Later master edits and new
+rounds preserve submitted evidence. Source rebases are explicit and Preparing-only;
+legal deletion review is separate from ordinary edits and is not an erasure receipt.
+
+The bilingual tracker and private read/unread inbox use current confirmed source
+deadlines, sponsor-zone instants and validated user display zones. Unknown, rolling,
+ambiguous, stale and revoked deadlines produce no live countdown or timed schedule.
+Four reminder offsets have recipient/event-version dedupe, transactional delivery
+rechecks and a finite recoverable worker. Cancelled attempts remain historical and
+can be rescheduled before due without duplicate delivery.
+
+Local PostgreSQL verification passed 711 backend tests (78 new cases), including
+the actual scanner opt-in, and eight client tests. Static/type/contracts/migration/
+secret checks, production build, all prior HTTP flows and the new real-clock 24h
+reminder/submission-history HTTP flow passed. The documents smoke initially failed
+registration in the combined run; its isolated actual-scanner rerun passed. Exact
+failures, harness corrections and skipped checks are recorded in
+[report12](phase-reports/12.md), with source traces in
+[scope](../docs/specs/phase-12-applications-reminders.md) and
+[ADR0016](../docs/adr/0016-application-evidence-and-deadline-inbox.md).
+
+Real official feeds, richer portal requirements, production periodic scheduling,
+DB-role/RLS/load evidence, legal erasure/retention/backup approvals and full browser/
+visual/accessibility interaction checks remain external or unverified. Reviewed
+round labels and elapsed-minute reminder offsets remain explicit assumptions.
+No commit, push, deployment, paid resource or real provider call was performed.
+Only Phase12's current outcome changes; earlier phases and Phases13–17 are preserved.
+The owner's subsequent explicit `Push` instruction authorizes committing and
+publishing this bounded Phase12 change only. Deployment and paid resources remain
+outside this authorization; no new phase is started.

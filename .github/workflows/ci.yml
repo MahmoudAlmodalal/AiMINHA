@@ -54,3 +54,5 @@ jobs:
         run: make smoke-credits credits-timeouts ai-timeouts secrets
       - name: Private documents, manual fallback and export recovery HTTP flow
         run: make smoke-documents files-recover secrets
+      - name: Student applications, frozen evidence and deadline inbox HTTP flow
+        run: make smoke-applications deadline-reminders secrets

@@ -1,5 +1,24 @@
 # Current requirement conflicts and dispositions
 
+## Phase12 runtime dispositions — 2026-10-17
+
+The current request authorizes only Phase12 with multiple agents, without commit,
+push, deployment or paid resources. Source bytes and other phase outcomes are
+preserved. See [ADR0016](../adr/0016-application-evidence-and-deadline-inbox.md)
+and [scope](phase-12-applications-reminders.md).
+
+| ID | Gap/assumption | Bounded disposition |
+|---|---|---|
+| C12-01 | Reviewed catalog rounds have no stable source ID | Derive identity from unique normalized reviewed labels; one blank-label round has one stable single-round key. Duplicate/ambiguous labels fail closed. No inferred year/new round or automatic old-round reassignment. |
+| C12-02 | Catalog requirement facts are document strings, not a typed mandatory portal checklist | Use exact reviewed DOCUMENT slots; empty requirements remain unknown and block Ready. Forms/actions are not guessed. Ready expresses this bounded checklist, not a guarantee of actual external portal completeness. |
+| C12-03 | Material source changes can invalidate a pinned draft but lifetime round uniqueness prevents replacing its record | Explicit Preparing-only rebase appends new source/profile/checklist evidence and clears draft selections after confirmation. Prior event/requirement/manifest history remains immutable. Submitted/terminal rebases are refused. |
+| C12-04 | PRD leaves final transition/correction policy open; derived architecture defines safe ordinary edges | Implement the documented matrix including Ready back edge and direct reported outcomes from Submitted as engineering assumptions. Evidence-only corrections append; terminal/backward status reversal has no approved policy and is refused. |
+| C12-05 | Official application feed requires a lawful documented integration | Store independent sourced/dated report evidence and keep real ingestion unavailable. Fixed LOCAL synthetic reports are explicitly synthetic, never verified official or an overwrite of the student's state. |
+| C12-06 | Immutability cannot prevent lawful erasure, but a physical/body purge policy is not approved | Accept owner-scoped submitted-artifact review requests with PENDING_LEGAL_REVIEW status; no client approval/erased flag. Protect ordinary deletion, while allowing canonical approved expired-account purge planning. Physical/body erasure remains external, not falsely acknowledged. |
+| C12-07 | Reminder day semantics around DST are not owner-resolved | Retain R18 elapsed-minute offsets20160/10080/4320/1440, subtract from confirmed donor instant and then display in the selected IANA zone. Unknown/rolling/date-only/ambiguous/stale/revoked facts produce no countdown/schedule. Future-due only; no missed-reminder catchup or viewing promise. |
+| C12-08 | Terminal cancellation should preserve history without making later opt-in ineffective | Keep each cancelled attempt immutable; allow a fresh future attempt after opt-in under one scheduled/delivered logical recipient/event-version/offset constraint. A delivered logical reminder never repeats. |
+| C12-09 | A selected draft upload can become unavailable before submission | Preserve selected references/hashes in history but project unavailable content as missing; Ready revalidates it and exact current missing notices reflect availability. Once submitted, ordinary deletion is blocked. |
+
 ## Phase11 runtime dispositions — 2026-10-17
 
 Only the current Phase11 request authorizes this implementation. Sources and

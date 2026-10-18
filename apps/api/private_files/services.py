@@ -262,9 +262,10 @@ def delete_owned(owner_id: Any, asset_id: Any) -> None:
         file = _owned(owner_id, asset_id)
         Account.objects.select_for_update().get(pk=owner_id)
         # Submitted document snapshots must retain immutable downloadable bytes.
+        from applications.services import asset_is_submitted
         from documents.services import asset_is_protected
 
-        if asset_is_protected(file.pk):
+        if asset_is_protected(file.pk) or asset_is_submitted(file.pk):
             raise IdentityError("FILE_FROZEN", 409)
         if file.capacity_state == "RELEASED":
             return

@@ -329,3 +329,45 @@ real operation. This filesystem fence supports a single host, not a distributed
 object-store guarantee. See [scope](docs/specs/phase-11-private-files-documents.md),
 [ADR0015](docs/adr/0015-private-file-and-document-boundaries.md) and
 [report11](tasks/phase-reports/11.md) for exact checks and remaining gates.
+
+## Phase12 applications and deadline inbox
+
+`/{locale}/applications` provides the owned saved-scholarship and application
+tracker. Each reviewed round has a separate record with timestamped status/activity
+history. Ready needs known reviewed document requirements and exact approved
+versions or accepted scanned uploads. The student explicitly reports external
+submission; MinhaAI does not submit to a portal. The submitted manifest pins exact
+version/file hashes, so later master edits/restore cannot change it. Source changes
+can be reviewed and explicitly rebased while Preparing; older evidence is retained.
+
+Official status is separate from the student's report. No real official feed is
+enabled without lawful integration. Artifact deletion review is separate from
+normal edits; a pending review is not a deletion receipt. Canonical approved account
+purge planning remains possible, while physical/body erasure requires its own
+approved legal policy. No new AI or Credit operation is introduced by tracking.
+
+`/{locale}/notifications` provides a private read/unread inbox, contextual links,
+optional preferences and a validated user display timezone. The finite worker
+schedules 14/7/3-day and 24-hour reminders only for current approved fresh CONFIRMED
+deadlines with unambiguous sponsor timezone evidence. Unknown/date-only/rolling,
+stale, superseded and revoked dates do not produce countdowns or timed reminders.
+The engineering default uses elapsed minutes before the verified donor instant;
+display conversion happens afterward. Delivered notices remain historical, and
+retry or re-opt-in cannot deliver the same logical reminder twice.
+
+```sh
+make migrate lint typecheck contracts-check migrations-check secrets build
+MINHAAI_REAL_SCANNER_TEST=1 .venv/bin/pytest -q
+make smoke-applications
+make deadline-reminders
+```
+
+Schedule `make deadline-reminders` with a trusted periodic runtime before real
+operation. It processes bounded recoverable batches and sends in-app only;
+no email/WhatsApp/Web Push, external portal calls or new hosting are configured.
+Source round identity is currently derived from distinct reviewed labels; ambiguous
+labels need source review and a new year is never invented. Empty document lists
+remain unknown, and typed portal form/action completeness is not inferred.
+See [scope](docs/specs/phase-12-applications-reminders.md),
+[ADR0016](docs/adr/0016-application-evidence-and-deadline-inbox.md) and
+[report12](tasks/phase-reports/12.md) for source traces, exact checks and gates.

@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "ai_gateway",
     "private_files",
     "documents",
+    "applications",
+    "notifications",
 ]
 AUTH_USER_MODEL = "identity.Account"
 MIDDLEWARE = [
@@ -159,8 +161,8 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "MinhaAI implemented API",
     "DESCRIPTION": (
-        "Bounded Phase 05–11 runtime: health, identity/privacy, catalog, "
-        "eligibility, credits, private files and versioned documents. "
+        "Bounded Phase 05–12 runtime: health, identity/privacy, catalog, "
+        "eligibility, credits, private files, documents, application tracking and inbox. "
         "Live private AI execution is unavailable."
     ),
     "VERSION": "0.1.0",
@@ -171,6 +173,10 @@ SPECTACULAR_SETTINGS = {
         "EligibilityProfileFieldEnum": "eligibility.serializers.FIELDS",
         "CreditEntryKindEnum": "credits.serializers.ENTRY_KINDS",
         "DocumentKindEnum": "documents.serializers.KINDS",
+        "ApplicationStateEnum": "applications.models.STATES",
+        "ApplicationReportOriginEnum": ["VERIFIED_OFFICIAL", "SYNTHETIC_LOCAL"],
+        "ApplicationRequirementStatusEnum": ["MISSING", "COMPLETE"],
+        "OriginEnum": ["MANUAL", "IMPORT"],
         "LocaleEnum": ["ar", "en"],
         "CatalogDeadlineKindEnum": ["UNKNOWN", "ROLLING", "DATE_ONLY", "CONFIRMED"],
     },

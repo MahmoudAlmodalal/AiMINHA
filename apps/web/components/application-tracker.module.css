@@ -1,0 +1,19 @@
+.tracker section { margin-block: 2rem; }
+.tracker fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.tracker input:not([type="checkbox"]) { width: 100%; }
+.cards { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.cards > li { min-width: 0; border: 1px solid #bdc9c6; border-radius: .5rem; padding: 1rem; }
+.cards button[aria-pressed="true"] { outline: 3px solid #13766a; outline-offset: 3px; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: .75rem; }
+.counts { display: flex; flex-wrap: wrap; gap: .75rem; padding: 0; list-style: none; }
+.counts li { padding: .3rem .65rem; border: 1px solid #bdc9c6; border-radius: .3rem; }
+.detail { border-block-start: 2px solid var(--action); padding-block-start: 1rem; scroll-margin-block-start: 1rem; }
+.history { padding-inline-start: 1.5rem; }
+.history li { margin-block: 1rem; border-block-end: 1px solid #cbd5e1; padding-block-end: 1rem; }
+.confirm { display: flex; align-items: flex-start; gap: .6rem; }
+.confirm input { flex: 0 0 auto; margin-block-start: .55rem; }
+.status { min-height: 1.8rem; }
+.hash { font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+.preview { white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid #bdc9c6; border-radius: .5rem; padding: 1rem; }
+.record { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tracker summary { min-height: 2.75rem; }

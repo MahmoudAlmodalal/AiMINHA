@@ -1,0 +1,10 @@
+.inbox section { margin-block: 2rem; }
+.messages { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.messages article { margin: 0; overflow-wrap: anywhere; }
+.messages [data-unread="true"] { border-inline-start: .35rem solid var(--action); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-block: 1rem; }
+.confirm { display: flex; align-items: flex-start; gap: .6rem; }
+.confirm input { flex: 0 0 auto; margin-block-start: .55rem; }
+.status { min-height: 1.8rem; }
+.inbox fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.inbox input[type="text"] { width: 100%; }

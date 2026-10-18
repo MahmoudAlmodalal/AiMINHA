@@ -97,11 +97,29 @@ def validate(document: dict[str, Any]) -> None:
         "/api/v1/documents/{document_id}/approvals",
         "/api/v1/documents/{document_id}/exports",
         "/api/v1/documents/{document_id}/compare",
+        "/api/v1/applications",
+        "/api/v1/applications/round-options",
+        "/api/v1/applications/{application_id}",
+        "/api/v1/applications/{application_id}/history",
+        "/api/v1/applications/{application_id}/notes",
+        "/api/v1/applications/{application_id}/transitions",
+        "/api/v1/applications/{application_id}/corrections",
+        "/api/v1/applications/{application_id}/rebase",
+        "/api/v1/applications/{application_id}/requirements",
+        "/api/v1/applications/{application_id}/requirements/{requirement_key}/artifact",
+        "/api/v1/applications/{application_id}/artifact-options",
+        "/api/v1/applications/{application_id}/submitted-artifacts",
+        "/api/v1/applications/{application_id}/artifact-deletion-requests",
+        "/api/v1/saved-scholarships",
+        "/api/v1/saved-scholarships/{scholarship_id}",
+        "/api/v1/notifications",
+        "/api/v1/notifications/{notification_id}/read",
+        "/api/v1/notification-preferences",
     }
     if set(document["paths"]) != authorized:
         raise ValueError(
-            "Only Phase 05–11 health, identity/privacy, catalog, eligibility, "
-            "credit, AI capability, private file and document routes are authorized."
+            "Only Phase 05–12 health, identity/privacy, catalog, eligibility, "
+            "credit, AI, private file, document, application and inbox routes are authorized."
         )
     if set(document["paths"]["/api/v1/health"]) != {"get"}:
         raise ValueError("Health must expose only the safe GET contract.")

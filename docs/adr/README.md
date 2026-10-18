@@ -62,3 +62,10 @@ processor, free-capacity, transport, quality and release evidence.
 records actual scanner admission, backend-authorized private reads, immutable
 document history/approval, recoverable free exports and a distinctly local
 synthetic document/accounting proof. Production storage and private AI remain gated.
+
+## Phase12 application history and deadline inbox decision
+
+[0016 — application evidence and confirmed-deadline inbox](0016-application-evidence-and-deadline-inbox.md)
+records explicit student-reported transitions, source-pinned history, exact submitted
+artifacts, separate legal-review requests and official-status evidence, plus a
+recoverable in-app reminder inbox. Ambiguous/unverified deadlines stay unavailable.

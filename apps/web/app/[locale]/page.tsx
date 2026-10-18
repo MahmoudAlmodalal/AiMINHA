@@ -13,6 +13,8 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
           <a href={`/${locale}/eligibility`}>{ar ? "الملف والأهلية" : "Profile and eligibility"}</a>{" · "}
           <a href={`/${locale}/wallet`}>{ar ? "رصيد الاستخدام" : "Credit wallet"}</a>{" · "}
           <a href={`/${locale}/documents`}>{ar ? "ملفاتي ومستنداتي" : "Files and documents"}</a>{" · "}
+          <a href={`/${locale}/applications`}>{ar ? "طلباتي" : "Applications"}</a>{" · "}
+          <a href={`/${locale}/notifications`}>{ar ? "الإشعارات" : "Notifications"}</a>{" · "}
           <a href={`/${locale}/account`}>{ar ? "الحساب والخصوصية" : "Account and privacy"}</a>{" · "}
           <a href={ar ? "/en" : "/ar"} lang={ar ? "en" : "ar"} hrefLang={ar ? "en" : "ar"}>
             {ar ? "English" : "العربية"}

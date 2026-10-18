@@ -6,6 +6,8 @@ urlpatterns = [
     path("api/v1/", include("identity.urls")),
     path("api/v1/", include("private_files.urls")),
     path("api/v1/", include("documents.urls")),
+    path("api/v1/", include("applications.urls")),
+    path("api/v1/", include("notifications.urls")),
     path("api/v1/", include("catalog.urls")),
     path("api/v1/", include("eligibility.urls")),
     path("api/v1/", include("credits.urls")),
