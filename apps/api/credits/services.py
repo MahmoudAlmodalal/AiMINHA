@@ -23,6 +23,7 @@ from credits.models import (
     SERVICES,
     CreditPolicy,
     Finalization,
+    GlobalAiDay,
     GlobalDay,
     Hold,
     LedgerEntry,
@@ -181,6 +182,8 @@ def reserve(owner_id: Any, service: str, key: str, input_id: Any) -> Operation:
     now = timezone.now()
     day = business_day(now)
     global_day, student_day = day_locks(user, day)
+    global_ai_day, _ = GlobalAiDay.objects.get_or_create(day=day)
+    global_ai_day = GlobalAiDay.objects.select_for_update().get(pk=global_ai_day.pk)
     wallet = Wallet.objects.select_for_update().filter(pk=user.pk).first()
     price = {
         "MATCHING_AI": policy.matching_price,
@@ -191,7 +194,8 @@ def reserve(owner_id: Any, service: str, key: str, input_id: Any) -> Operation:
         raise IdentityError("INSUFFICIENT_CREDITS", 409, "Insufficient available credits")
     if student_day.spent + student_day.reserved + price > policy.daily_spend_cap:
         raise IdentityError("DAILY_SPEND_CAP", 429, "Daily spending cap reached")
-    if global_day.admitted_operations >= policy.global_ai_cap:
+    # One global AI allowance: credit-backed and non-credit AI admissions share it.
+    if global_day.admitted_operations + global_ai_day.operations >= policy.global_ai_cap:
         raise IdentityError("GLOBAL_AI_CAP", 429, "Daily AI operation limit reached")
     op = Operation.objects.create(
         owner=user,

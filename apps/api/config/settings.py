@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "documents",
     "applications",
     "notifications",
+    "support",
 ]
 AUTH_USER_MODEL = "identity.Account"
 MIDDLEWARE = [
@@ -176,6 +177,8 @@ SPECTACULAR_SETTINGS = {
         "ApplicationStateEnum": "applications.models.STATES",
         "ApplicationReportOriginEnum": ["VERIFIED_OFFICIAL", "SYNTHETIC_LOCAL"],
         "ApplicationRequirementStatusEnum": ["MISSING", "COMPLETE"],
+        "SupportStateEnum": "support.models.STATES",
+        "SupportPriorityEnum": "support.models.PRIORITIES",
         "OriginEnum": ["MANUAL", "IMPORT"],
         "LocaleEnum": ["ar", "en"],
         "CatalogDeadlineKindEnum": ["UNKNOWN", "ROLLING", "DATE_ONLY", "CONFIRMED"],

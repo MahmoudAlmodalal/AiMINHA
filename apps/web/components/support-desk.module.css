@@ -1,0 +1,18 @@
+.desk { display: grid; gap: 2rem; }
+.desk section { margin-block: 1rem; }
+.desk textarea { width: 100%; min-height: 7rem; }
+.desk .confirm { align-items: flex-start; }
+.desk .confirm input { flex: 0 0 auto; margin-block-start: .55rem; }
+.desk .confirm label { margin-block: 0; }
+.ticket-list { list-style: none; padding: 0; display: grid; gap: .5rem; }
+.ticket-list li { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.badge { display: inline-block; padding: .1rem .5rem; border: 1px solid #9aa8ac; border-radius: .3rem; font-size: .875rem; }
+.thread { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.thread li { border: 1px solid #bdc9c6; border-radius: .5rem; padding: .75rem; }
+.thread li[data-author="AI"] { border-inline-start: .35rem solid #7c3aed; }
+.thread li[data-author="ADMIN"] { border-inline-start: .35rem solid #13766a; }
+.thread p { white-space: pre-line; overflow-wrap: anywhere; margin-block: .35rem; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-block: 1rem; }
+.actions .attach { margin-block: 0; }
+.actions select { padding: .7rem; font: inherit; border: 1px solid #6b807a; border-radius: .3rem; background: var(--surface); color: var(--text); }
+.status { min-height: 1.8rem; }

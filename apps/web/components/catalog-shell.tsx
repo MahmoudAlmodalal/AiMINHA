@@ -12,6 +12,7 @@ export function CatalogShell({ locale, title, path, children }: {
         <a href={`/${locale}/scholarships`}>{ar ? "المنح الدراسية" : "Scholarships"}</a>
         <a href={`/${locale}/documents`}>{ar ? "ملفاتي ومستنداتي" : "Files and documents"}</a>
         <a href={`/${locale}/applications`}>{ar ? "طلباتي" : "Applications"}</a>
+        <a href={`/${locale}/support`}>{ar ? "الدعم" : "Support"}</a>
         <a href={`/${locale}/notifications`}>{ar ? "الإشعارات" : "Notifications"}</a>
         <a href={`/${locale}/account`}>{ar ? "الحساب" : "Account"}</a>
         <a href={`/${ar ? "en" : "ar"}${path}`} lang={ar ? "en" : "ar"} hrefLang={ar ? "en" : "ar"}>

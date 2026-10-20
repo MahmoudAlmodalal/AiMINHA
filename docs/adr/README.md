@@ -69,3 +69,12 @@ synthetic document/accounting proof. Production storage and private AI remain ga
 records explicit student-reported transitions, source-pinned history, exact submitted
 artifacts, separate legal-review requests and official-status evidence, plus a
 recoverable in-app reminder inbox. Ambiguous/unverified deadlines stay unavailable.
+
+## Phase13 support and SLA decision
+
+[0017 — support SLA and AI triage](0017-support-sla-and-ai-triage.md)
+records the owned six-state ticket aggregate with an append-only event log,
+business-hours first-response measurement on an administrator working calendar,
+assigned-agent-only ticket attachment access, deterministic local triage with
+mandatory human handoff and a bounded free AI allowance that never moves credits.
+Provider-backed triage, staffing evidence and release approval remain separate.

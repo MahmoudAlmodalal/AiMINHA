@@ -78,6 +78,18 @@ class GlobalDay(models.Model):
     admitted_operations = models.PositiveBigIntegerField(default=0)
 
 
+class GlobalAiDay(models.Model):
+    """Platform-wide AI admissions that are not credit operations.
+
+    The global AI budget is shared by every AI entry point, so a support AI reply
+    and a credit-backed AI operation draw on the same allowance. The financial
+    admitted-operation counter is untouched by these admissions.
+    """
+
+    day = models.DateField(primary_key=True)
+    operations = models.PositiveBigIntegerField(default=0)
+
+
 class SyntheticInput(models.Model):
     """Local test port: an opaque fixture, never a student document/profile."""
 

@@ -23,6 +23,4 @@ urlpatterns = [
     path("account/restorations", views.RestorationsView.as_view()),
     path("files", views.FilesView.as_view()),
     path("files/<uuid:file_id>", views.FileView.as_view()),
-    path("tickets/<uuid:ticket_id>/attachments", views.SharesView.as_view()),
-    path("tickets/<uuid:ticket_id>/attachments/<uuid:attachment_id>", views.ShareView.as_view()),
 ]

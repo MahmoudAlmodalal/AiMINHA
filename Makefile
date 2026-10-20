@@ -84,6 +84,9 @@ smoke-documents:
 smoke-applications:
 	$(VENV)/python scripts/smoke_applications.py
 
+smoke-support:
+	$(VENV)/python scripts/smoke_support.py
+
 credits-timeouts:
 	$(VENV)/python apps/api/manage.py mark_credit_timeouts
 

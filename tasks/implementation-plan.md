@@ -1,6 +1,6 @@
 # MinhaAI implementation roadmap — phase gates
 
-**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phase10 local mock/egress-denial gate passed; Phase11 local actual-scanner/manual-documents/synthetic-accounting gate passed; Phase12 local application-history/frozen-evidence/confirmed-deadline-inbox gate passed. Phases13–17 and unrelated product backlog items remain TODO.
+**Status legend**: TODO / IN PROGRESS / PASS / BLOCKED. PASS means the named phase gate passed for its reported checks; design passes in 00–04 do not imply runtime, external approval or launch readiness. Phase05 bootstrap and Phase06 identity/privacy local gates passed; hosted CI and external integrations remain separate evidence. Phase07 catalog local gate passed; Phase08 rule-first local gate and measurement plan passed; Phase09 synthetic accounting local gate passed; Phase10 local mock/egress-denial gate passed; Phase11 local actual-scanner/manual-documents/synthetic-accounting gate passed; Phase12 local application-history/frozen-evidence/confirmed-deadline-inbox gate passed. Phase13 local support-ticket/SLA/AI-triage gate passed. Phases14–17 and unrelated product backlog items remain TODO.
 
 | ID | Phase / prompt | Prerequisite | Minimum deliverable | Acceptance gate | Status |
 |---|---|---|---|---|---|
@@ -17,7 +17,7 @@
 | 10 | AI gateway & budgets | 08–09 | Adapters, classification, gating, mock fallback | Private-data unapproved routes fail closed | PASS |
 | 11 | Private files & documents | 06, 09–10 | Scan/upload, CV/docs, versioning, export | Secure storage and charge-on-valid-save only | PASS |
 | 12 | Applications & deadlines | 07, 11 | Tracking, states, history, reminders | Verified deadlines only; frozen submitted artifacts | PASS |
-| 13 | Support & SLA | 06, 10 | Ticket support, SLA engine, assigned attachments | No private library access, hours/priority tests | TODO |
+| 13 | Support & SLA | 06, 10 | Ticket support, SLA engine, assigned attachments | No private library access, hours/priority tests | PASS |
 | 14 | Chrome extension | 06, 12 | MV3 review-only assisted autofill | No OTP/password access, no auto-submit | TODO |
 | 15 | Admin & operations UI | 07–14 | Moderation, configurable limits, audit, flags | Admin privilege boundaries audited | TODO |
 | 16 | Integrated testing/security | 06–15 | E2E, abuse cases, load tests, release report | Security gates and target metrics recorded | TODO |
@@ -231,3 +231,39 @@ Only Phase12's current outcome changes; earlier phases and Phases13–17 are pre
 The owner's subsequent explicit `Push` instruction authorizes committing and
 publishing this bounded Phase12 change only. Deployment and paid resources remain
 outside this authorization; no new phase is started.
+
+## Phase13 execution state — 2026-10-20
+
+**13: PASS — LOCAL_SUPPORT_TICKET_SLA_AI_TRIAGE_GATE.** Owned tickets carry the
+six documented states with an append-only, SQL-guarded transition log. The first
+human response is measured on an administrator working calendar (default
+Sun–Thu 09:00–17:00 Asia/Hebron with holidays, 4/8/24/48 business-hour targets);
+the clock starts on the human request or handoff, ends on the first substantive
+human reply, is never satisfied by an automated answer and is not distorted by
+waiting for the student. Resolution, seven-day quiet-period closure, fourteen-day
+reopening and one rating editable for seven days are implemented.
+
+Ticket attachments are explicit, revocable shares of a student-owned asset,
+readable only by the currently assigned agent with an audit trail; the private
+library stays unreachable from support. AI triage works only from the allowed
+context of the current ticket, suggests a category and priority without changing
+the administrator's decision, and hands off to a human on request, uncertainty,
+two consecutive failures, financial/security topics or critical deadline. The
+experiment is bounded to five free AI messages per student per day inside the
+shared global AI budget, and no AI path can move a credit balance.
+
+Local PostgreSQL verification passed 756 backend tests (50 new support cases)
+with five pre-existing actual-scanner skips because ClamAV is unavailable here,
+plus eight client tests. Static/type/contracts/migration/secret checks, the
+production build, the base and identity HTTP smokes and a new real-HTTP support
+smoke passed. The deterministic local triage is an engineering choice forced by
+the current provider-approval state and is not a model capability. Provider-backed
+triage, staffing evidence behind the experimental targets, a production scheduler,
+DB-role/RLS/load evidence, legal erasure/retention review for support data, the
+Phase15 administrator console and release signoff remain external gates. See
+[report13](phase-reports/13.md), [scope](../docs/specs/phase-13-support-sla.md)
+and [ADR0017](../docs/adr/0017-support-sla-and-ai-triage.md). Only Phase13's
+current outcome changes; earlier phases and Phases14–17 are preserved. No commit,
+push, deployment, paid resource or real provider call was performed; the working
+tree holds this bounded Phase13 change only and the branch remains at the Phase12
+baseline.

@@ -161,12 +161,3 @@ class FileSerializer(serializers.Serializer):
 class FilePageSerializer(serializers.Serializer):
     items = FileSerializer(many=True)
     next_cursor = serializers.CharField(allow_null=True)
-
-
-class ShareInputSerializer(StrictSerializer):
-    asset_id = serializers.UUIDField()
-
-
-class ShareSerializer(serializers.Serializer):
-    id = serializers.UUIDField()
-    version = serializers.IntegerField(min_value=1)
