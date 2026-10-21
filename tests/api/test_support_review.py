@@ -163,6 +163,43 @@ def png():
 # --- 01: assigned-ticket actions need the scope and a live MFA proof ---------
 
 
+def assigned_ticket_actions(client, ticket):
+    """Every administrator-facing action on an assigned ticket."""
+    return [
+        ("thread", client.get(f"/api/v1/admin/tickets/{ticket['id']}/messages")),
+        (
+            "reply",
+            request(
+                client,
+                "post",
+                f"admin/tickets/{ticket['id']}/messages",
+                {"body": "Please upload a PNG copy.", "request_human": False},
+            ),
+        ),
+        (
+            "transition",
+            request(
+                client,
+                "post",
+                f"admin/tickets/{ticket['id']}/transitions",
+                {"to_state": "AWAITING_STUDENT", "reason_code": "Waiting on student"},
+                revision=ticket["row_version"],
+            ),
+        ),
+        (
+            "classification",
+            request(
+                client,
+                "put",
+                f"admin/tickets/{ticket['id']}/classification",
+                {"category": "TECHNICAL", "priority": "HIGH", "reason_code": "Classified"},
+                revision=ticket["row_version"],
+            ),
+        ),
+        ("sla", client.get(f"/api/v1/admin/tickets/{ticket['id']}/sla")),
+    ]
+
+
 def test_an_assigned_agent_without_the_support_scope_is_refused():
     client, _ = student()
     assigner_client, assigner = agent()
@@ -170,17 +207,28 @@ def test_an_assigned_agent_without_the_support_scope_is_refused():
     ticket = create_ticket(client, request_human=True)
     assign(assigner_client, assigner, ticket, agent_id=target.pk)
     Account.objects.filter(pk=target.pk).update(admin_scopes=["SUPPORT_QUEUE"])
-    response = target_client.get(f"/api/v1/admin/tickets/{ticket['id']}/messages")
-    assert response.status_code == 403
-    assert (
-        request(
-            target_client,
-            "post",
-            f"admin/tickets/{ticket['id']}/messages",
-            {"body": "Please upload a PNG copy.", "request_human": False},
-        ).status_code
-        == 403
-    )
+
+    # Missing SUPPORT scope refuses every assigned action with ADMIN_MFA_REQUIRED
+    for action_name, response in assigned_ticket_actions(target_client, ticket):
+        assert response.status_code == 403, f"{action_name} returned {response.status_code}"
+        assert response.json()["code"] == "ADMIN_MFA_REQUIRED", (
+            f"{action_name} returned {response.json()}"
+        )
+
+    # An agent who never held the support scope at all is also refused
+    never_client, never_agent = agent(scopes=["SUPPORT_QUEUE"])
+    Ticket.objects.filter(pk=ticket["id"]).update(assigned_admin=never_agent)
+    for action_name, response in assigned_ticket_actions(never_client, ticket):
+        assert response.status_code == 403, f"{action_name} returned {response.status_code}"
+        assert response.json()["code"] == "ADMIN_MFA_REQUIRED", (
+            f"{action_name} returned {response.json()}"
+        )
+
+    # Missing SUPPORT_QUEUE scope refuses queue access with ADMIN_MFA_REQUIRED
+    no_queue_client, _ = agent(scopes=["SUPPORT"])
+    queue_resp = no_queue_client.get("/api/v1/admin/tickets")
+    assert queue_resp.status_code == 403
+    assert queue_resp.json()["code"] == "ADMIN_MFA_REQUIRED"
 
 
 def test_an_assigned_agent_without_a_live_mfa_proof_is_refused():
@@ -189,7 +237,40 @@ def test_an_assigned_agent_without_a_live_mfa_proof_is_refused():
     ticket = create_ticket(client, request_human=True)
     assign(agent_client, agent_user, ticket)
     IdentitySession.objects.filter(account=agent_user).update(mfa_verified_at=None)
-    assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/messages").status_code == 403
+
+    # Queue access without live MFA
+    queue_resp = agent_client.get("/api/v1/admin/tickets")
+    assert queue_resp.status_code == 403
+    assert queue_resp.json()["code"] == "ADMIN_MFA_REQUIRED"
+
+    # Every assigned-ticket action without live MFA
+    for action_name, response in assigned_ticket_actions(agent_client, ticket):
+        assert response.status_code == 403, f"{action_name} returned {response.status_code}"
+        assert response.json()["code"] == "ADMIN_MFA_REQUIRED", (
+            f"{action_name} returned {response.json()}"
+        )
+
+
+def test_an_assigned_agent_with_an_expired_mfa_proof_is_refused():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+    IdentitySession.objects.filter(account=agent_user).update(
+        mfa_verified_at=timezone.now() - timedelta(minutes=16)
+    )
+
+    # Queue access with expired MFA proof
+    queue_resp = agent_client.get("/api/v1/admin/tickets")
+    assert queue_resp.status_code == 403
+    assert queue_resp.json()["code"] == "ADMIN_MFA_REQUIRED"
+
+    # Every assigned-ticket action with expired MFA proof
+    for action_name, response in assigned_ticket_actions(agent_client, ticket):
+        assert response.status_code == 403, f"{action_name} returned {response.status_code}"
+        assert response.json()["code"] == "ADMIN_MFA_REQUIRED", (
+            f"{action_name} returned {response.json()}"
+        )
 
 
 def test_removing_the_support_scope_revokes_the_assigned_access():
@@ -197,9 +278,44 @@ def test_removing_the_support_scope_revokes_the_assigned_access():
     agent_client, agent_user = agent()
     ticket = create_ticket(client, request_human=True)
     assign(agent_client, agent_user, ticket)
+
+    # Active assigned agent with scope and live MFA has access
     assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/messages").status_code == 200
+    assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/sla").status_code == 200
+    assert agent_client.get("/api/v1/admin/tickets").status_code == 200
+
+    # Removing the SUPPORT scope immediately revokes all assigned actions without reassignment
     Account.objects.filter(pk=agent_user.pk).update(admin_scopes=["SUPPORT_QUEUE"])
-    assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/messages").status_code == 403
+    for action_name, response in assigned_ticket_actions(agent_client, ticket):
+        assert response.status_code == 403, f"{action_name} returned {response.status_code}"
+        assert response.json()["code"] == "ADMIN_MFA_REQUIRED", (
+            f"{action_name} returned {response.json()}"
+        )
+
+    # Removing SUPPORT_QUEUE immediately revokes queue access
+    Account.objects.filter(pk=agent_user.pk).update(admin_scopes=[])
+    queue_resp = agent_client.get("/api/v1/admin/tickets")
+    assert queue_resp.status_code == 403
+    assert queue_resp.json()["code"] == "ADMIN_MFA_REQUIRED"
+
+
+def test_a_student_role_is_refused_for_every_admin_action():
+    client, _ = student()
+    assigner_client, assigner = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(assigner_client, assigner, ticket)
+
+    # A student session attempting queue access
+    queue_resp = client.get("/api/v1/admin/tickets")
+    assert queue_resp.status_code == 403
+    assert queue_resp.json()["code"] == "ADMIN_MFA_REQUIRED"
+
+    # A student session attempting assigned-ticket admin actions
+    for action_name, response in assigned_ticket_actions(client, ticket):
+        assert response.status_code == 403, f"{action_name} returned {response.status_code}"
+        assert response.json()["code"] == "ADMIN_MFA_REQUIRED", (
+            f"{action_name} returned {response.json()}"
+        )
 
 
 # --- 02: a replay re-checks authorization -----------------------------------
@@ -233,6 +349,107 @@ def test_a_replay_after_reassignment_is_refused_without_disclosing_the_ticket():
     )
     assert replay.status_code == 403
     assert "Upload problem" not in replay.content.decode()
+
+
+def test_a_replay_after_support_scope_revocation_is_refused():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+    key = str(uuid.uuid4())
+    payload = {"body": "Please upload a PNG copy.", "request_human": False}
+    first = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert first.status_code == 200, first.content
+
+    # Revoking the support scope must block the replay
+    Account.objects.filter(pk=agent_user.pk).update(admin_scopes=["SUPPORT_QUEUE"])
+    replay = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert replay.status_code == 403
+    assert replay.json()["code"] == "ADMIN_MFA_REQUIRED"
+
+
+def test_a_replay_after_mfa_proof_expiration_is_refused():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+    key = str(uuid.uuid4())
+    payload = {"body": "Please upload a PNG copy.", "request_human": False}
+    first = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert first.status_code == 200, first.content
+
+    # Expiring the MFA proof must block the replay
+    IdentitySession.objects.filter(account=agent_user).update(
+        mfa_verified_at=timezone.now() - timedelta(minutes=16)
+    )
+    replay = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert replay.status_code == 403
+    assert replay.json()["code"] == "ADMIN_MFA_REQUIRED"
+
+
+def test_a_transition_and_classification_replay_after_scope_revocation_is_refused():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+
+    trans_key = str(uuid.uuid4())
+    trans_payload = {"to_state": "AWAITING_STUDENT", "reason_code": "Waiting on student"}
+    current_rev = queue_row(agent_client, ticket["id"])["row_version"]
+    trans_first = request(
+        agent_client,
+        "post",
+        f"admin/tickets/{ticket['id']}/transitions",
+        trans_payload,
+        revision=current_rev,
+        key=trans_key,
+    )
+    assert trans_first.status_code == 200, trans_first.content
+
+    class_key = str(uuid.uuid4())
+    class_payload = {"category": "TECHNICAL", "priority": "HIGH", "reason_code": "Classified"}
+    current_rev = queue_row(agent_client, ticket["id"])["row_version"]
+    class_first = request(
+        agent_client,
+        "put",
+        f"admin/tickets/{ticket['id']}/classification",
+        class_payload,
+        revision=current_rev,
+        key=class_key,
+    )
+    assert class_first.status_code == 200, class_first.content
+
+    # Revoking support scope blocks both replays
+    Account.objects.filter(pk=agent_user.pk).update(admin_scopes=["SUPPORT_QUEUE"])
+    trans_replay = request(
+        agent_client,
+        "post",
+        f"admin/tickets/{ticket['id']}/transitions",
+        trans_payload,
+        revision=current_rev,
+        key=trans_key,
+    )
+    assert trans_replay.status_code == 403
+    assert trans_replay.json()["code"] == "ADMIN_MFA_REQUIRED"
+
+    class_replay = request(
+        agent_client,
+        "put",
+        f"admin/tickets/{ticket['id']}/classification",
+        class_payload,
+        revision=current_rev,
+        key=class_key,
+    )
+    assert class_replay.status_code == 403
+    assert class_replay.json()["code"] == "ADMIN_MFA_REQUIRED"
 
 
 def test_an_authorized_replay_returns_the_same_result_and_is_audited():

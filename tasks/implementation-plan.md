@@ -245,7 +245,12 @@ reopening and one rating editable for seven days are implemented.
 
 Ticket attachments are explicit, revocable shares of a student-owned asset,
 readable only by the currently assigned agent with an audit trail; the private
-library stays unreachable from support. AI triage works only from the allowed
+library stays unreachable from support. Assigned-ticket actions (thread read,
+reply, transition, classification, and SLA read) are scope-and-MFA gated: an
+agent must hold the active administrator role, the SUPPORT scope (SUPPORT_QUEUE for
+queue access), and a live MFA proof in addition to ticket assignment, scope
+revocation revokes access immediately without reassignment, and idempotent replays
+re-verify authorization before returning cached results. AI triage works only from the allowed
 context of the current ticket, suggests a category and priority without changing
 the administrator's decision, and hands off to a human on request, uncertainty,
 two consecutive failures, financial/security topics or critical deadline. The
