@@ -1,5 +1,18 @@
 # Current requirement conflicts and dispositions
 
+## Phase13 runtime dispositions — 2026-10-20
+
+The current request authorizes Phase13 review fixes for ticket 04: enforcing the
+per-student daily AI allowance capped at five, and the shared global AI budget
+with credits. Source bytes and earlier phase outcomes are preserved. See
+[ADR0017](../adr/0017-support-sla-and-ai-triage.md) and
+[scope](phase-13-support-sla.md).
+
+| ID | Conflict/gap | Bounded disposition |
+|---|---|---|
+| C13-01 | Phase 13 derived spec (§3.3) allows raising the daily AI allowance as an explicit policy change, whereas product owner binding rule 4 and the phase review mandate a hard cap of five messages per student per day | In this phase, a published support calendar policy can reduce the per-student daily AI allowance below five, but cannot raise it above five. Any value above five is refused with `INVALID_POLICY` ("The AI support allowance cannot exceed five messages") unless an explicit owner policy decision is recorded. The five-per-student bound is this phase's hard limit. |
+| C13-02 | Independent AI admission paths could allow excess admissions beyond global capacity | Enforce one shared global AI allowance across both credit-backed operations and free support replies. Both paths check and enforce against the same `CreditPolicy.global_ai_cap` under the shared global lock, without moving financial credit balances on the support path. |
+
 ## Phase12 runtime dispositions — 2026-10-17
 
 The current request authorizes only Phase12 with multiple agents, without commit,

@@ -2,16 +2,25 @@
 
 import io
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, time, timedelta
+from threading import Barrier
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
-from credits.models import GlobalAiDay, GlobalDay, LedgerEntry
-from credits.services import business_day, grant_signup, initialize_policy, reserve
+from credits.models import GlobalAiDay, GlobalDay, LedgerEntry, Operation, Wallet
+from credits.services import (
+    business_day,
+    create_synthetic_input,
+    grant_signup,
+    initialize_policy,
+    reserve,
+)
+from django.db import connections
 from django.utils import timezone
 from identity.models import Account, IdentitySession
-from identity.security import digest
+from identity.security import IdentityError, digest
 from PIL import Image
 from privacy.models import PrivacyAudit
 from private_files import scanner
@@ -681,7 +690,6 @@ def test_a_support_reply_and_a_credit_admission_share_one_allowance():
     assert result.status_code == 200, result.content
     assert result.json()["ai"]["available"] is True
     grant_signup(user.pk)
-    from credits.services import create_synthetic_input
 
     fixture = create_synthetic_input(user.pk)
     refused = None
@@ -691,6 +699,191 @@ def test_a_support_reply_and_a_credit_admission_share_one_allowance():
         refused = error
     assert refused is not None
     assert getattr(refused, "code", "") == "GLOBAL_AI_CAP"
+
+    # Financial ledger and counters: support path never debited or moved credits.
+    wallet = Wallet.objects.get(owner=user)
+    assert wallet.reserved_balance == 0
+    assert wallet.posted_balance == 30  # Only SIGNUP_GRANT
+    assert LedgerEntry.objects.filter(owner=user).count() == 1  # Only SIGNUP_GRANT
+    assert GlobalDay.objects.get(day=day).admitted_operations == 0
+    assert GlobalAiDay.objects.get(day=day).operations == 100
+
+
+def test_a_credit_admission_followed_by_a_support_reply_share_one_allowance():
+    client, user = student()
+    grant_signup(user.pk)
+    day = business_day(timezone.now())
+    GlobalDay.objects.get_or_create(day=day)
+    GlobalAiDay.objects.get_or_create(day=day)
+    global_ai = GlobalAiDay.objects.get(day=day)
+    global_ai.operations = 99
+    global_ai.save(update_fields=["operations"])
+    fixture = create_synthetic_input(user.pk)
+
+    # First: Credit admission consumes the single remaining global slot.
+    op = reserve(user.pk, "MATCHING_AI", str(uuid.uuid4()), fixture)
+    assert op is not None
+    assert GlobalDay.objects.get(day=day).admitted_operations == 1
+    assert GlobalAiDay.objects.get(day=day).operations == 99
+
+    # Second: Support reply in the reverse order is refused and hands off to human.
+    ticket = create_ticket(client)
+    result = request(client, "post", f"tickets/{ticket['id']}/ai-replies", {})
+    assert result.status_code == 200, result.content
+    assert result.json()["ai"]["available"] is False
+    assert result.json()["ai"]["reason"] == "GLOBAL_BUDGET_EXHAUSTED"
+    assert result.json()["ticket"]["state"] == "AWAITING_ADMIN"
+
+    # Financial ledger and counters: no balance movement from support.
+    wallet = Wallet.objects.get(owner=user)
+    assert wallet.reserved_balance == 1  # Only the credit operation hold
+    assert wallet.posted_balance == 30
+    assert LedgerEntry.objects.filter(owner=user).count() == 1  # Only SIGNUP_GRANT
+    assert GlobalDay.objects.get(day=day).admitted_operations == 1
+    assert GlobalAiDay.objects.get(day=day).operations == 99
+
+
+def race(*actions):
+    barrier = Barrier(len(actions))
+
+    def run(action):
+        try:
+            connections.close_all()
+            barrier.wait(timeout=15)
+            return action()
+        except IdentityError as error:
+            return error.code
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=len(actions)) as pool:
+        return list(pool.map(run, actions))
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_support_reply_and_credit_admission_at_the_cap_do_not_exceed_budget():
+    initialize_policy()
+    client_a, user_a = student()
+    session_a = IdentitySession.objects.filter(account=user_a).first()
+    ticket_a = services.create_ticket(
+        user_a,
+        session_a,
+        {
+            "category": "TECHNICAL",
+            "subject": "Concurrent support test",
+            "message": "Application upload error details.",
+            "request_human": False,
+        },
+        str(uuid.uuid4()),
+    )
+
+    client_b, user_b = student()
+    grant_signup(user_b.pk)
+    fixture_b = create_synthetic_input(user_b.pk)
+
+    day = business_day(timezone.now())
+    GlobalDay.objects.get_or_create(day=day)
+    GlobalAiDay.objects.get_or_create(day=day)
+    global_ai = GlobalAiDay.objects.get(day=day)
+    global_ai.operations = 99
+    global_ai.save(update_fields=["operations"])
+    global_day = GlobalDay.objects.get(day=day)
+    global_day.admitted_operations = 0
+    global_day.save(update_fields=["admitted_operations"])
+
+    key_b = str(uuid.uuid4())
+    correlation_a = str(uuid.uuid4())
+
+    outcomes = race(
+        lambda: services.ai_reply(user_a, session_a, ticket_a["id"], correlation_a),
+        lambda: reserve(user_b.pk, "MATCHING_AI", key_b, fixture_b),
+    )
+
+    support_res, credit_res = outcomes[0], outcomes[1]
+
+    # Exactly one admission succeeds; the other is refused.
+    support_won = (
+        isinstance(support_res, dict)
+        and support_res.get("ai", {}).get("available") is True
+        and credit_res == "GLOBAL_AI_CAP"
+    )
+    credit_won = (
+        isinstance(credit_res, Operation)
+        and isinstance(support_res, dict)
+        and support_res.get("ai", {}).get("available") is False
+        and support_res.get("ai", {}).get("reason") == "GLOBAL_BUDGET_EXHAUSTED"
+    )
+    assert support_won or credit_won
+
+    # Total admissions across both paths equal exactly the cap of 100.
+    total = (
+        GlobalDay.objects.get(day=day).admitted_operations
+        + GlobalAiDay.objects.get(day=day).operations
+    )
+    assert total == 100
+
+    # Financial ledger on user A is untouched:
+    assert LedgerEntry.objects.filter(owner=user_a).count() == 0
+    assert Wallet.objects.filter(owner=user_a).count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_support_replies_at_the_cap_do_not_exceed_budget():
+    initialize_policy()
+    client_a, user_a = student()
+    session_a = IdentitySession.objects.filter(account=user_a).first()
+    ticket_a = services.create_ticket(
+        user_a,
+        session_a,
+        {
+            "category": "TECHNICAL",
+            "subject": "Concurrent support reply A",
+            "message": "First concurrent issue.",
+            "request_human": False,
+        },
+        str(uuid.uuid4()),
+    )
+
+    client_b, user_b = student()
+    session_b = IdentitySession.objects.filter(account=user_b).first()
+    ticket_b = services.create_ticket(
+        user_b,
+        session_b,
+        {
+            "category": "TECHNICAL",
+            "subject": "Concurrent support reply B",
+            "message": "Second concurrent issue.",
+            "request_human": False,
+        },
+        str(uuid.uuid4()),
+    )
+
+    day = business_day(timezone.now())
+    GlobalDay.objects.get_or_create(day=day)
+    GlobalAiDay.objects.get_or_create(day=day)
+    global_ai = GlobalAiDay.objects.get(day=day)
+    global_ai.operations = 99
+    global_ai.save(update_fields=["operations"])
+    global_day = GlobalDay.objects.get(day=day)
+    global_day.admitted_operations = 0
+    global_day.save(update_fields=["admitted_operations"])
+
+    outcomes = race(
+        lambda: services.ai_reply(user_a, session_a, ticket_a["id"], str(uuid.uuid4())),
+        lambda: services.ai_reply(user_b, session_b, ticket_b["id"], str(uuid.uuid4())),
+    )
+
+    available_flags = [res.get("ai", {}).get("available") for res in outcomes]
+    reasons = [res.get("ai", {}).get("reason") for res in outcomes]
+    assert available_flags.count(True) == 1
+    assert available_flags.count(False) == 1
+    assert "GLOBAL_BUDGET_EXHAUSTED" in reasons
+
+    total = (
+        GlobalDay.objects.get(day=day).admitted_operations
+        + GlobalAiDay.objects.get(day=day).operations
+    )
+    assert total == 100
 
 
 # --- 05: sensitive topics always hand off -----------------------------------
