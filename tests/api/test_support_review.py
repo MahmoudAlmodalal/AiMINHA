@@ -349,6 +349,66 @@ def test_a_replay_after_reassignment_is_refused_without_disclosing_the_ticket():
     )
     assert replay.status_code == 403
     assert "Upload problem" not in replay.content.decode()
+    assert PrivacyAudit.objects.filter(
+        actor_id=agent_user.pk,
+        action="support_ticket_access",
+        outcome="DENY",
+        resource_id=ticket["id"],
+    ).exists()
+
+
+def test_a_replay_after_scope_removal_is_refused_and_audited():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+    key = str(uuid.uuid4())
+    payload = {"body": "Please upload a PNG copy.", "request_human": False}
+    first = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert first.status_code == 200, first.content
+    Account.objects.filter(pk=agent_user.pk).update(admin_scopes=["SUPPORT_QUEUE"])
+    replay = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert replay.status_code == 403
+    assert replay.json()["code"] == "ADMIN_MFA_REQUIRED"
+    assert "Upload problem" not in replay.content.decode()
+    assert PrivacyAudit.objects.filter(
+        actor_id=agent_user.pk,
+        action="support_ticket_access",
+        outcome="DENY",
+        resource_id=ticket["id"],
+    ).exists()
+
+
+def test_a_replay_after_mfa_expiry_is_refused_and_audited():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+    key = str(uuid.uuid4())
+    payload = {"body": "Please upload a PNG copy.", "request_human": False}
+    first = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert first.status_code == 200, first.content
+    IdentitySession.objects.filter(account=agent_user).update(
+        mfa_verified_at=timezone.now() - timedelta(minutes=20)
+    )
+    replay = request(
+        agent_client, "post", f"admin/tickets/{ticket['id']}/messages", payload, key=key
+    )
+    assert replay.status_code == 403
+    assert replay.json()["code"] == "ADMIN_MFA_REQUIRED"
+    assert "Upload problem" not in replay.content.decode()
+    assert PrivacyAudit.objects.filter(
+        actor_id=agent_user.pk,
+        action="support_ticket_access",
+        outcome="DENY",
+        resource_id=ticket["id"],
+    ).exists()
 
 
 def test_a_replay_after_support_scope_revocation_is_refused():
@@ -468,7 +528,15 @@ def test_an_authorized_replay_returns_the_same_result_and_is_audited():
     assert first.status_code == 200
     assert replay.status_code == 200
     assert replay.json()["id"] == first.json()["id"]
-    assert PrivacyAudit.objects.filter(action="support_ticket_access").exists()
+    assert (
+        PrivacyAudit.objects.filter(
+            actor_id=agent_user.pk,
+            action="support_ticket_access",
+            outcome="ALLOW",
+            resource_id=ticket["id"],
+        ).count()
+        >= 2
+    )
 
 
 # --- 03: the assigned agent can list the explicit attachments --------------

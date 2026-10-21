@@ -177,9 +177,13 @@ def authorize_assigned(actor: Account, proof: IdentitySession, ticket_id: Any) -
     Run before an idempotent command so a replay cannot return a cached ticket to a
     caller who is no longer allowed to receive it.
     """
-    require_admin(actor, proof, SUPPORT_SCOPE)
-    ticket = _assigned_ticket(actor, ticket_id)
-    audit(actor, "support_ticket_access", resource=ticket.pk)
+    try:
+        require_admin(actor, proof, SUPPORT_SCOPE)
+        ticket = _assigned_ticket(actor, ticket_id, audit_denial=False)
+    except IdentityError as exc:
+        audit(actor, "support_ticket_access", "DENY", resource=ticket_id, reason=exc.code)
+        raise
+    audit(actor, "support_ticket_access", "ALLOW", resource=ticket.pk)
 
 
 def authorize_owner(actor: Account, proof: IdentitySession, ticket_id: Any) -> None:
@@ -188,15 +192,19 @@ def authorize_owner(actor: Account, proof: IdentitySession, ticket_id: Any) -> N
     A ticket authorization row without a support ticket still identifies the owner,
     which keeps the Phase06 explicit-share contract intact.
     """
-    owner = student(actor, proof)
-    ticket = Ticket.objects.filter(pk=ticket_id, owner=owner).first()
-    if ticket is None:
-        access = TicketAccess.objects.filter(pk=ticket_id, owner=owner).first()
-        if access is None:
-            raise IdentityError("TICKET_NOT_FOUND", 404, "Ticket not found")
-        audit(owner, "support_ticket_access", resource=ticket_id)
-        return
-    audit(owner, "support_ticket_access", resource=ticket.pk)
+    try:
+        owner = student(actor, proof)
+        ticket = Ticket.objects.filter(pk=ticket_id, owner=owner).first()
+        if ticket is None:
+            access = TicketAccess.objects.filter(pk=ticket_id, owner=owner).first()
+            if access is None:
+                raise IdentityError("TICKET_NOT_FOUND", 404, "Ticket not found")
+            audit(owner, "support_ticket_access", "ALLOW", resource=ticket_id)
+            return
+        audit(owner, "support_ticket_access", "ALLOW", resource=ticket.pk)
+    except IdentityError as exc:
+        audit(actor, "support_ticket_access", "DENY", resource=ticket_id, reason=exc.code)
+        raise
 
 
 def _persist(ticket: Ticket) -> None:
