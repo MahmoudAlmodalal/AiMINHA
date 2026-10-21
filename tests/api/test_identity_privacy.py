@@ -30,6 +30,7 @@ from privacy.models import (
 )
 from privacy.services import has_consent, publish_retention, queue_expired_deletion, restore_account
 from rest_framework.test import APIClient
+from support.models import Ticket
 
 pytestmark = pytest.mark.django_db
 PASSWORD = "Synthetic-only-passphrase-529!"  # noqa: S105 -- public synthetic test fixture.
@@ -307,26 +308,45 @@ def test_support_requires_current_assignment_explicit_exact_share_and_mfa(client
     sibling = PrivateAsset.objects.create(
         owner=owner, object_version="synthetic-v2", state="ACCEPTED"
     )
-    ticket = TicketAccess.objects.create(owner=owner, assigned_admin=admin)
+    access = TicketAccess.objects.create(owner=owner, assigned_admin=admin)
+    ticket = Ticket.objects.create(
+        access=access,
+        owner=owner,
+        category="GENERAL",
+        subject="Synthetic support ticket",
+        assigned_admin=admin,
+    )
     login(client, owner)
     response = post(client, f"tickets/{ticket.pk}/attachments", {"asset_id": str(asset.pk)})
     assert response.status_code == 201
-    share = TicketShare.objects.get(pk=response.json()["id"])
     reader = APIClient(enforce_csrf_checks=True)
     login(reader, admin)
-    path = f"/api/v1/tickets/{ticket.pk}/attachments/{share.pk}"
-    assert reader.get(path).status_code == 403
+    list_path = f"/api/v1/admin/tickets/{ticket.pk}/attachments"
+    assert reader.get(list_path).status_code == 403
     # Synthetic server MFA proof only; no API accepts a client-supplied MFA flag.
     IdentitySession.objects.filter(pk=proof(reader).pk).update(mfa_verified_at=timezone.now())
+    listing = reader.get(list_path)
+    assert listing.status_code == 200
+    items = listing.json()["items"]
+    assert len(items) == 1
+    share_id = items[0]["id"]
+    assert items[0]["display_name"] == "synthetic-v1"
+    assert items[0]["state"] == "SHARED"
+    path = f"/api/v1/tickets/{ticket.pk}/attachments/{share_id}"
     assert reader.get(path).status_code == 200
     assert reader.get(f"/api/v1/files/{sibling.pk}").status_code == 403
+    Ticket.objects.filter(pk=ticket.pk).update(assigned_admin=None)
     TicketAccess.objects.filter(pk=ticket.pk).update(assigned_admin=None)
+    assert reader.get(list_path).status_code == 403
     assert reader.get(path).status_code == 403
+    Ticket.objects.filter(pk=ticket.pk).update(assigned_admin=admin)
     TicketAccess.objects.filter(pk=ticket.pk).update(assigned_admin=admin)
     response = client.delete(
-        path, HTTP_X_CSRFTOKEN=csrf(client), HTTP_IF_MATCH=f'"share-{share.pk}-1"'
+        path, HTTP_X_CSRFTOKEN=csrf(client), HTTP_IF_MATCH=f'"share-{share_id}-1"'
     )
     assert response.status_code == 202
+    after_listing = reader.get(list_path).json()["items"]
+    assert after_listing[0]["state"] == "REVOKED"
     assert reader.get(path).status_code == 403
 
 

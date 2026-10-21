@@ -10,6 +10,7 @@ from typing import Any
 
 from credits import services as credits
 from credits.models import CreditPolicy, GlobalAiDay, GlobalDay, PolicyHead
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import F, IntegerField, OuterRef, Subquery
 from django.utils import timezone
@@ -1293,19 +1294,34 @@ def sla_view(
     return sla_data(ticket)
 
 
+def _attachment_display_name(share: TicketShare) -> str:
+    try:
+        stored = getattr(share.asset, "storedfile", None)
+        if stored and stored.name:
+            return stored.name
+    except (AttributeError, ObjectDoesNotExist):
+        return share.asset.object_version or "attachment"
+    return share.asset.object_version or "attachment"
+
+
 @transaction.atomic
 def attachments(
     user: Account, proof: IdentitySession, ticket_id: Any, correlation: Any
 ) -> dict[str, Any]:
     owner = student(user, proof)
     ticket = _owned_ticket(owner, ticket_id)
-    rows = TicketShare.objects.filter(ticket_id=ticket.pk, owner=owner).order_by("created_at")
+    rows = (
+        TicketShare.objects.filter(ticket_id=ticket.pk, owner=owner)
+        .select_related("asset", "asset__storedfile")
+        .order_by("created_at")
+    )
     audit(owner, "support_attachments_read", resource=ticket.pk, correlation=correlation)
     return {
         "items": [
             {
                 "id": str(row.pk),
                 "asset_id": str(row.asset_id),
+                "display_name": _attachment_display_name(row),
                 "state": "REVOKED" if row.revoked_at else "SHARED",
                 "version": row.version,
                 "created_at": row.created_at.isoformat().replace("+00:00", "Z"),
@@ -1320,14 +1336,19 @@ def admin_attachments(
 ) -> dict[str, Any]:
     """The explicit attachments of an assigned ticket. Never the wider library."""
     require_admin(actor, proof, SUPPORT_SCOPE)
-    _assigned_ticket(actor, ticket_id)
-    rows = TicketShare.objects.filter(ticket_id=ticket_id).order_by("created_at")
-    audit(actor, "support_attachments_read", resource=ticket_id, correlation=correlation)
+    ticket = _assigned_ticket(actor, ticket_id)
+    rows = (
+        TicketShare.objects.filter(ticket_id=ticket.pk)
+        .select_related("asset", "asset__storedfile")
+        .order_by("created_at")
+    )
+    audit(actor, "support_attachments_read", resource=ticket.pk, correlation=correlation)
     return {
         "items": [
             {
                 "id": str(row.pk),
                 "asset_id": str(row.asset_id),
+                "display_name": _attachment_display_name(row),
                 "state": "REVOKED" if row.revoked_at else "SHARED",
                 "version": row.version,
                 "created_at": row.created_at.isoformat().replace("+00:00", "Z"),
@@ -1343,12 +1364,17 @@ def attachment_metadata(
     """Assigned-agent metadata read of one explicit share. The privacy layer audits it."""
     require_admin(actor, proof, SUPPORT_SCOPE)
     privacy.ticket_asset(actor, proof, ticket_id, share_id)
-    share = TicketShare.objects.filter(pk=share_id, ticket_id=ticket_id).first()
+    share = (
+        TicketShare.objects.filter(pk=share_id, ticket_id=ticket_id)
+        .select_related("asset", "asset__storedfile")
+        .first()
+    )
     if share is None:
         raise IdentityError("ATTACHMENT_NOT_FOUND", 404, "Attachment not found")
     return {
         "id": str(share.pk),
         "asset_id": str(share.asset_id),
+        "display_name": _attachment_display_name(share),
         "state": "REVOKED" if share.revoked_at else "SHARED",
         "version": share.version,
         "created_at": share.created_at.isoformat().replace("+00:00", "Z"),

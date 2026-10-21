@@ -548,19 +548,65 @@ def test_the_assigned_agent_lists_the_explicit_attachments(private_settings):
     other_agent_client, _ = agent()
     ticket = create_ticket(client, request_human=True)
     asset = file_services.store_bytes(user.pk, "cv.png", "image/png", png(), str(uuid.uuid4()))
+    unshared = file_services.store_bytes(
+        user.pk, "private.png", "image/png", png(), str(uuid.uuid4())
+    )
     share = request(
         client, "post", f"tickets/{ticket['id']}/attachments", {"asset_id": str(asset.pk)}
     )
     assert share.status_code == 201, share.content
     assign(agent_client, agent_user, ticket)
+
+    # 1. Assigned agent receives list with identifier, display_name, revocation state;
+    #    wider library (unshared private.png) is never in the listing.
     listing = agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments")
     assert listing.status_code == 200, listing.content
     items = listing.json()["items"]
+    assert len(items) == 1
     assert items[0]["id"] == share.json()["id"]
+    assert items[0]["display_name"] == "cv.png"
     assert items[0]["state"] == "SHARED"
+    assert str(unshared.pk) not in [i["asset_id"] for i in items]
+
+    # 2. Scope guard: without SUPPORT scope, listing is refused (403).
+    Account.objects.filter(pk=agent_user.pk).update(admin_scopes=["SUPPORT_QUEUE"])
+    assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments").status_code == 403
+    Account.objects.filter(pk=agent_user.pk).update(admin_scopes=AGENT_SCOPES)
+
+    # 3. Live MFA guard: missing or expired MFA proof is refused (403).
+    IdentitySession.objects.filter(account=agent_user).update(mfa_verified_at=None)
+    assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments").status_code == 403
+    IdentitySession.objects.filter(account=agent_user).update(
+        mfa_verified_at=timezone.now() - timedelta(minutes=20)
+    )
+    assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments").status_code == 403
+    IdentitySession.objects.filter(account=agent_user).update(mfa_verified_at=timezone.now())
+    assert agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments").status_code == 200
+
+    # 4. Assignment guard: administrator not assigned to this ticket cannot list attachments (403),
+    #    and inherits the denial audit from _assigned_ticket.
     refused = other_agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments")
     assert refused.status_code == 403
-    assert PrivacyAudit.objects.filter(action="support_attachments_read").exists()
+    assert PrivacyAudit.objects.filter(
+        action="support_ticket_read", outcome="DENY", reason="NOT_ASSIGNED"
+    ).exists()
+
+    # 5. Successful listing produces a support access audit entry.
+    assert PrivacyAudit.objects.filter(action="support_attachments_read", outcome="ALLOW").exists()
+
+    # 6. Revocation state update is reflected in the listing.
+    revoke = request(
+        client,
+        "delete",
+        f"tickets/{ticket['id']}/attachments/{items[0]['id']}",
+        revision=f"share-{items[0]['id']}-{items[0]['version']}",
+    )
+    assert revoke.status_code == 202
+    after_listing = agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments").json()[
+        "items"
+    ]
+    assert after_listing[0]["state"] == "REVOKED"
+    assert after_listing[0]["display_name"] == "cv.png"
 
 
 # --- 04: one shared global allowance ----------------------------------------

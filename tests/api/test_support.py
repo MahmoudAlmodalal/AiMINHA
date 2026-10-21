@@ -465,8 +465,12 @@ def test_an_explicitly_shared_attachment_is_readable_only_by_the_assigned_agent(
         {"asset_id": str(asset.pk)},
     )
     assert share.status_code == 201, share.content
-    attachment = share.json()
     assign(agent_client, agent_user, ticket)
+    listing = agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments")
+    assert listing.status_code == 200, listing.content
+    attachment = listing.json()["items"][0]
+    assert attachment["display_name"] == "cv.png"
+    assert attachment["state"] == "SHARED"
     metadata = agent_client.get(f"/api/v1/tickets/{ticket['id']}/attachments/{attachment['id']}")
     assert metadata.status_code == 200, metadata.content
     grant = request(
@@ -490,17 +494,21 @@ def test_a_revoked_attachment_is_denied_to_the_assigned_agent(private_settings):
     agent_client, agent_user = agent()
     ticket = create_ticket(client, request_human=True)
     asset = file_services.store_bytes(user.pk, "cv.png", "image/png", png(), str(uuid.uuid4()))
-    attachment = request(
+    share = request(
         client,
         "post",
         f"tickets/{ticket['id']}/attachments",
         {"asset_id": str(asset.pk)},
-    ).json()
+    )
+    assert share.status_code == 201, share.content
+    assign(agent_client, agent_user, ticket)
+    listing = agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments")
+    attachment = listing.json()["items"][0]
     listed = client.get(f"/api/v1/tickets/{ticket['id']}/attachments").json()["items"]
     assert listed[0]["id"] == attachment["id"]
+    assert listed[0]["display_name"] == "cv.png"
     assert listed[0]["state"] == "SHARED"
     assert listed[0]["version"] == attachment["version"]
-    assign(agent_client, agent_user, ticket)
     revoke = request(
         client,
         "delete",
@@ -520,17 +528,21 @@ def test_an_unassigned_agent_cannot_read_a_shared_attachment(private_settings):
     other_agent_client, _ = agent()
     ticket = create_ticket(client, request_human=True)
     asset = file_services.store_bytes(user.pk, "cv.png", "image/png", png(), str(uuid.uuid4()))
-    attachment = request(
+    share = request(
         client,
         "post",
         f"tickets/{ticket['id']}/attachments",
         {"asset_id": str(asset.pk)},
-    ).json()
-    assign(agent_client, agent_user, ticket)
-    response = other_agent_client.get(
-        f"/api/v1/tickets/{ticket['id']}/attachments/{attachment['id']}"
     )
+    assert share.status_code == 201, share.content
+    assign(agent_client, agent_user, ticket)
+    listing = agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments")
+    assert listing.status_code == 200
+    attachment_id = listing.json()["items"][0]["id"]
+    response = other_agent_client.get(f"/api/v1/tickets/{ticket['id']}/attachments/{attachment_id}")
     assert response.status_code == 403
+    other_listing = other_agent_client.get(f"/api/v1/admin/tickets/{ticket['id']}/attachments")
+    assert other_listing.status_code == 403
 
 
 # --- AI triage ---------------------------------------------------------------

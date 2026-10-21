@@ -200,6 +200,7 @@ class RatingSerializer(serializers.Serializer):
 class AttachmentSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     asset_id = serializers.UUIDField()
+    display_name = serializers.CharField(max_length=255, default="", allow_blank=True)
     state = serializers.ChoiceField(choices=["SHARED", "REVOKED"])
     version = serializers.IntegerField(min_value=1)
     created_at = serializers.DateTimeField()

@@ -1680,6 +1680,8 @@ export interface components {
             id: string;
             /** Format: uuid */
             asset_id: string;
+            /** @default  */
+            display_name: string;
             state: components["schemas"]["AttachmentStateEnum"];
             version: number;
             /** Format: date-time */

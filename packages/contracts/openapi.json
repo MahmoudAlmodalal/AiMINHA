@@ -14621,6 +14621,11 @@
             "type": "string",
             "format": "uuid"
           },
+          "display_name": {
+            "type": "string",
+            "default": "",
+            "maxLength": 255
+          },
           "state": {
             "$ref": "#/components/schemas/AttachmentStateEnum"
           },
