@@ -81,6 +81,20 @@ NOT_HELPFUL_PHRASES = (
     "لا تزال",
     "لم أحصل على رد",
 )
+HELPFUL_PHRASES = (
+    "did help",
+    "that helped",
+    "it helped",
+    "was helpful",
+    "helped me",
+    "that worked",
+    "it worked",
+    "worked for me",
+    "أفادتني",
+    "ساعدتني",
+    "نجحت",
+    "تم الحل",
+)
 
 
 def student(user: Account, proof: IdentitySession) -> Account:
@@ -345,6 +359,11 @@ def reports_no_help(body: str) -> bool:
     return any(phrase in normalized for phrase in NOT_HELPFUL_PHRASES)
 
 
+def reports_help(body: str) -> bool:
+    normalized = " ".join(str(body).lower().split())
+    return any(phrase in normalized for phrase in HELPFUL_PHRASES)
+
+
 @transaction.atomic
 def create_ticket(
     user: Account, proof: IdentitySession, data: dict[str, Any], correlation: Any
@@ -504,6 +523,26 @@ def post_message(
                 to_state="AWAITING_ADMIN",
                 actor=owner,
                 reason="REPEATED_FAILURE",
+                now=now,
+            )
+    elif reports_help(text):
+        ticket.ai_failure_streak = 0
+        if ticket.state == "AWAITING_STUDENT":
+            _set_state(
+                ticket,
+                "AWAITING_ADMIN",
+                "STATE_CHANGED",
+                actor=owner,
+                reason="STUDENT_REPLIED",
+                now=now,
+            )
+        else:
+            _event(
+                ticket,
+                "MESSAGE_ADDED",
+                to_state=ticket.state,
+                actor=owner,
+                reason="STUDENT_REPLIED",
                 now=now,
             )
     elif ticket.state == "AWAITING_STUDENT":
@@ -801,6 +840,7 @@ def student_transition(
             raise IdentityError("TICKET_CLOSED", 409, "This ticket is already closed")
         if ticket.state == "RESOLVED":
             # Confirming an administrator resolution does not shorten the quiet period.
+            ticket.ai_failure_streak = 0
             _event(
                 ticket,
                 "MESSAGE_ADDED",
@@ -814,6 +854,7 @@ def student_transition(
             # without an objection; only the bounded worker closes it.
             ticket.resolved_at = now
             ticket.rating_window_until = now + timedelta(days=policy.rating_edit_days)
+            ticket.ai_failure_streak = 0
             _set_state(
                 ticket,
                 "RESOLVED",

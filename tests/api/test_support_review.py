@@ -975,6 +975,81 @@ def test_a_failure_on_one_ticket_does_not_hand_off_another():
     assert other.json()["state"] != "AWAITING_ADMIN"
 
 
+def test_a_successful_subsequent_answer_resets_the_counter():
+    client, _ = student()
+    ticket = create_ticket(client)
+    request(client, "post", f"tickets/{ticket['id']}/ai-replies", {})
+    # One failure increments the counter
+    first = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/messages",
+        {"body": "That did not help, the upload still fails.", "request_human": False},
+    )
+    assert first.status_code == 200, first.content
+    assert first.json()["state"] != "AWAITING_ADMIN"
+
+    # A successful subsequent answer resets the counter
+    reply = request(client, "post", f"tickets/{ticket['id']}/ai-replies", {})
+    assert reply.status_code == 200, reply.content
+    assert reply.json()["ai"]["available"] is True
+    assert reply.json()["ticket"]["state"] == "AI_HANDLING"
+
+    # Next failure is only the first of a new streak, so it does not hand off
+    after_reset = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/messages",
+        {"body": "That did not work either.", "request_human": False},
+    )
+    assert after_reset.status_code == 200, after_reset.content
+    assert after_reset.json()["state"] != "AWAITING_ADMIN"
+
+    # Second consecutive failure hands off to a human
+    second = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/messages",
+        {"body": "It still did not work for me at all.", "request_human": False},
+    )
+    assert second.status_code == 200, second.content
+    assert second.json()["state"] == "AWAITING_ADMIN"
+
+
+def test_a_student_confirming_help_resets_the_counter():
+    client, _ = student()
+    ticket = create_ticket(client)
+    request(client, "post", f"tickets/{ticket['id']}/ai-replies", {})
+    first = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/messages",
+        {"body": "That did not help, the upload still fails.", "request_human": False},
+    )
+    assert first.status_code == 200, first.content
+    assert first.json()["state"] != "AWAITING_ADMIN"
+
+    # Student confirms advice helped, resetting the counter
+    helped = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/messages",
+        {"body": "That helped, it worked now!", "request_human": False},
+    )
+    assert helped.status_code == 200, helped.content
+    assert helped.json()["state"] != "AWAITING_ADMIN"
+
+    # Next failure does not hand off because counter was reset
+    subsequent = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/messages",
+        {"body": "That did not work either.", "request_human": False},
+    )
+    assert subsequent.status_code == 200, subsequent.content
+    assert subsequent.json()["state"] != "AWAITING_ADMIN"
+
+
 # --- 08, 09, 10, 11: rating and lifecycle -----------------------------------
 
 
