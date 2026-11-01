@@ -272,3 +272,11 @@ current outcome changes; earlier phases and Phases14–17 are preserved. No comm
 push, deployment, paid resource or real provider call was performed; the working
 tree holds this bounded Phase13 change only and the branch remains at the Phase12
 baseline.
+
+
+## Issues #22–#35 execution state — 2026-11-01
+
+**PASS — LOCAL_ISSUES_RESOLUTION_GATE.** Reviewed identity ingress, constant-work failed sign-in, deletion review renewal, file/document cursor pagination, copy/retry idempotency, shared AI budget dispatch alignment, support quiet periods/objections, substantive first-human SLA metrics, exact Asia/Hebron DST working hours, and attachment display names are implemented and verified across 190 backend unit tests and 13 frontend client tests.
+
+**Status: BLOCKED — EXTERNAL_GATES.** In accordance with `AGENTS.md`, full release cannot be claimed without external compliance gates: production hosting terms, live AI provider legal sign-offs, production database deployment/RLS, external malware scanner verification, and product owner release approval. See [report13-issues-resolution](phase-reports/13-issues-resolution.md).
+

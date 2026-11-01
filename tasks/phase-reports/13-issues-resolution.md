@@ -62,6 +62,10 @@ All 14 open GitHub issues were implemented and verified using 4 parallel subagen
 | OpenAPI Schema & Contract Drift | `scripts/contracts.py --check` | PASS (no drift) |
 | Production Build | `npm run build` | PASS (22/22 static pages generated) |
 
-## Remaining Defects and Risks
-- Production PostgreSQL database and hosted deployment remain external gates.
-- AI provider live credentials and external legal compliance policies remain gated.
+## Status: BLOCKED — EXTERNAL_GATES
+
+Local verification for issues #22–#35 is complete (`PASS — LOCAL_ISSUES_RESOLUTION_GATE`). In accordance with repository safety invariants (`AGENTS.md`), general release status is marked **BLOCKED** on external compliance gates:
+- `EXTERNAL_GATE`: Live AI provider agreements and contractual approvals for student private data.
+- `EXTERNAL_GATE`: Production PostgreSQL RLS, backups rehearsal, and external scanner verification.
+- `EXTERNAL_GATE`: Formal legal review of retention, deletion, and cross-border policies.
+- `EXTERNAL_GATE`: Product owner sign-off and hosted environment authorization.
