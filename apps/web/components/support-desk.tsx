@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { createHealthClient, getCsrf, validateSession } from "@minhaai/contracts";
+import { createHealthClient, getCsrf, validateSession, calculateTotalPages } from "@minhaai/contracts";
 import styles from "./support-desk.module.css";
 
 type Language = "ar" | "en";
@@ -23,7 +23,7 @@ type Ticket = {
   sla: Sla;
 };
 type Notice = { sequence: number; author_kind: "STUDENT" | "ADMIN" | "AI"; body: string; substantive: boolean; created_at: string };
-type Attachment = { id: string; asset_id: string; state: "SHARED" | "REVOKED"; version: number; created_at: string };
+export type Attachment = { id: string; asset_id: string; display_name: string; state: "SHARED" | "REVOKED"; version: number; created_at: string };
 type OwnedFile = { id: string; state: string; declared_size: number; created_at: string };
 type AiOutcome = { available: boolean; reason: string; category: string; priority: string; confidence: number | null };
 
@@ -109,7 +109,14 @@ function attachment(value: unknown): Attachment {
   const row = record(value);
   const state = text(row.state, 16);
   if (state !== "SHARED" && state !== "REVOKED") throw new RequestFailure("INVALID_RESPONSE");
-  return { id: id(row.id), asset_id: id(row.asset_id), state, version: integer(row.version, 1), created_at: instant(row.created_at) };
+  return {
+    id: id(row.id),
+    asset_id: id(row.asset_id),
+    display_name: text(row.display_name, 255),
+    state,
+    version: integer(row.version, 1),
+    created_at: instant(row.created_at),
+  };
 }
 function ownedFile(value: unknown): OwnedFile {
   const row = record(value);
@@ -136,6 +143,10 @@ export function SupportDesk({ locale }: { locale: Language }) {
   const ar = locale === "ar";
   const [access, setAccess] = useState<"loading" | "ready" | "denied" | "unavailable">("loading");
   const [rows, setRows] = useState<Ticket[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [selected, setSelected] = useState<Ticket | null>(null);
   const [thread, setThread] = useState<Notice[]>([]);
   const [shares, setShares] = useState<Attachment[]>([]);
@@ -158,7 +169,7 @@ export function SupportDesk({ locale }: { locale: Language }) {
     ? { CRITICAL: "حرجة", HIGH: "عالية", NORMAL: "عادية", LOW: "منخفضة" }
     : { CRITICAL: "Critical", HIGH: "High", NORMAL: "Normal", LOW: "Low" };
 
-  function clearPrivate() { setRows([]); setSelected(null); setThread([]); setShares([]); keys.current.clear(); }
+  function clearPrivate() { setRows([]); setSelected(null); setThread([]); setShares([]); setTotal(0); setTotalPages(1); setPage(1); keys.current.clear(); }
   function report(error: unknown) {
     if (error instanceof RequestFailure && [401, 403].includes(error.status)) { clearPrivate(); setAccess("denied"); return; }
     setFailed(true);
@@ -206,6 +217,38 @@ export function SupportDesk({ locale }: { locale: Language }) {
     setReference(new Date().toISOString());
     return current;
   }
+  async function loadTickets(targetPage: number, targetPageSize: number, signal?: AbortSignal) {
+    const listed = await request(`/tickets?page=${targetPage}&page_size=${targetPageSize}`, { signal });
+    const pageData = record(listed);
+    if (!Array.isArray(pageData.items)) throw new RequestFailure("INVALID_RESPONSE");
+    const parsedRows = pageData.items.map(ticket);
+    const parsedTotal = integer(pageData.total, 0);
+    const parsedPageSize = integer(pageData.page_size, 1);
+    const parsedPage = integer(pageData.page, 1);
+    const computedTotalPages = calculateTotalPages(parsedTotal, parsedPageSize);
+    setRows(parsedRows);
+    setTotal(parsedTotal);
+    setPageSize(parsedPageSize);
+    setPage(parsedPage);
+    setTotalPages(computedTotalPages);
+    return { rows: parsedRows, total: parsedTotal, page: parsedPage, pageSize: parsedPageSize, totalPages: computedTotalPages };
+  }
+  async function navigatePage(nextPage: number) {
+    if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
+    setBusy(true); setMessage(""); setFailed(false);
+    try {
+      await loadTickets(nextPage, pageSize);
+      setStale(false);
+    } catch (error) { report(error); } finally { setBusy(false); }
+  }
+  async function changePageSize(nextSize: number) {
+    if (nextSize < 1 || nextSize === pageSize) return;
+    setBusy(true); setMessage(""); setFailed(false);
+    try {
+      await loadTickets(1, nextSize);
+      setStale(false);
+    } catch (error) { report(error); } finally { setBusy(false); }
+  }
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
@@ -217,10 +260,7 @@ export function SupportDesk({ locale }: { locale: Language }) {
         if (!session.response.ok || !session.data) throw new RequestFailure("SESSION_UNAVAILABLE");
         const proof = validateSession(session.data);
         if (proof.roles[0] !== "STUDENT" || Date.parse(proof.expires_at) <= Date.now()) { clearPrivate(); setAccess("denied"); return; }
-        const listed = await request("/tickets?page=1&page_size=20", { signal: controller.signal });
-        const page = record(listed);
-        if (!Array.isArray(page.items)) throw new RequestFailure("INVALID_RESPONSE");
-        setRows(page.items.map(ticket));
+        await loadTickets(1, 20, controller.signal);
         setStale(false);
         setAccess("ready");
       } catch (error) {
@@ -246,6 +286,11 @@ export function SupportDesk({ locale }: { locale: Language }) {
     try {
       const created = ticket(await mutate("/tickets", "POST", draft));
       setRows(current => [created, ...current]);
+      setTotal(count => {
+        const nextTotal = count + 1;
+        setTotalPages(calculateTotalPages(nextTotal, pageSize));
+        return nextTotal;
+      });
       setDraft({ category: "", subject: "", message: "", request_human: false });
       await loadTicket(created.id);
       setMessage(ar ? "تم فتح التذكرة." : "The ticket was opened.");
@@ -403,6 +448,42 @@ export function SupportDesk({ locale }: { locale: Language }) {
           </li>)}
         </ul>
       </>}
+      {total > 0 && <nav className="ticket-pagination" aria-label={ar ? "صفحات التذاكر" : "Ticket pages"}>
+        <button
+          type="button"
+          className="secondary"
+          disabled={busy || page <= 1}
+          onClick={() => void navigatePage(page - 1)}
+          aria-label={ar ? "الصفحة السابقة" : "Previous page"}
+        >
+          {ar ? "السابق" : "Previous"}
+        </button>
+        <span aria-live="polite" aria-atomic="true">
+          {ar ? `صفحة ${page} / ${totalPages}` : `Page ${page} / ${totalPages}`}
+        </span>
+        <button
+          type="button"
+          className="secondary"
+          disabled={busy || page >= totalPages}
+          onClick={() => void navigatePage(page + 1)}
+          aria-label={ar ? "الصفحة التالية" : "Next page"}
+        >
+          {ar ? "التالي" : "Next"}
+        </button>
+        <label className="page-size-selector">
+          {ar ? "تذاكر لكل صفحة" : "Tickets per page"}
+          <select
+            value={pageSize}
+            disabled={busy}
+            onChange={event => void changePageSize(Number(event.target.value))}
+            aria-label={ar ? "عدد التذاكر لكل صفحة" : "Tickets per page"}
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </label>
+      </nav>}
     </section>
 
     {selected && <section aria-live="polite">
@@ -425,7 +506,9 @@ export function SupportDesk({ locale }: { locale: Language }) {
         <dd>{shares.length === 0
           ? (ar ? "لم تشارك أي ملف." : "You have not shared any file.")
           : shares.map(item => <span key={item.id} className="badge">
-            {item.state === "SHARED" ? (ar ? "مشارك" : "shared") : (ar ? "ملغى" : "revoked")}
+            <strong>{item.display_name}</strong>{" "}
+            <small className="secondary-detail">({item.asset_id.slice(0, 8)})</small>{" "}
+            <span className="attachment-status">{item.state === "SHARED" ? (ar ? "مشارك" : "shared") : (ar ? "ملغى" : "revoked")}</span>
             {item.state === "SHARED" && <>{" "}
               <button type="button" className="secondary" onClick={() => revokeShare(item)} disabled={busy}>
                 {ar ? "إلغاء المشاركة" : "Revoke"}

@@ -6,7 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from identity.models import RateBucket
-from identity.security import IdentityError, PublicCatalogRead, digest, require_admin
+from identity.security import IdentityError, PublicCatalogRead, digest, get_client_ip, require_admin
 from identity.views import CSRF, ETAG, IDEMPOTENCY, IdentityView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -240,7 +240,7 @@ class PublicView(APIView):
         now = timezone.now()
         with transaction.atomic():
             bucket, _ = RateBucket.objects.get_or_create(
-                key=digest("public_catalog:" + request.META.get("REMOTE_ADDR", "unknown"))
+                key=digest("public_catalog:" + get_client_ip(request))
             )
             bucket = RateBucket.objects.select_for_update().get(pk=bucket.pk)
             if now >= bucket.window_started + timedelta(minutes=15):

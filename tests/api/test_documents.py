@@ -296,3 +296,175 @@ def test_immutable_sql_versions_owner_head_and_frozen_snapshot():
     restored = services.restore_version(user, proof, version.document_id, version.pk, 1)
     snapshot.refresh_from_db()
     assert restored.current_id != version.pk and snapshot.version_id == version.pk
+
+
+def test_document_cursor_pagination_traverses_beyond_100_records():
+    client, user = signed_client()
+    for i in range(105):
+        doc = Document.objects.create(owner=user, kind="CV")
+        services.append_version(
+            doc,
+            {"title": f"Document {i:03d}", "language": "en", "content": f"Content {i}"},
+            provenance="MANUAL",
+        )
+
+    # 1. Default page returns 100 items and a valid next_cursor
+    first_page = client.get("/api/v1/documents")
+    assert first_page.status_code == 200
+    first_data = first_page.json()
+    assert len(first_data["items"]) == 100
+    assert first_data["next_cursor"] is not None
+    assert first_data["next_cursor"] == str(first_data["items"][-1]["id"])
+
+    # 2. Second page using next_cursor returns remaining 5 items and next_cursor=None
+    second_page = client.get("/api/v1/documents", {"cursor": first_data["next_cursor"]})
+    assert second_page.status_code == 200
+    second_data = second_page.json()
+    assert len(second_data["items"]) == 5
+    assert second_data["next_cursor"] is None
+
+    # 3. Complete traversal yields all 105 unique documents ordered by pk
+    all_items = []
+    cursor = None
+    while True:
+        params = {"cursor": cursor} if cursor else {}
+        resp = client.get("/api/v1/documents", params)
+        assert resp.status_code == 200
+        page = resp.json()
+        all_items.extend(page["items"])
+        cursor = page["next_cursor"]
+        if not cursor:
+            break
+    assert len(all_items) == 105
+    all_ids = [item["id"] for item in all_items]
+    assert len(set(all_ids)) == 105
+    assert all_ids == sorted(all_ids)
+
+    # 4. Custom page_size
+    custom_page = client.get("/api/v1/documents", {"page_size": 25})
+    assert custom_page.status_code == 200
+    assert len(custom_page.json()["items"]) == 25
+    assert custom_page.json()["next_cursor"] == custom_page.json()["items"][-1]["id"]
+
+    # 5. Validation: invalid page_size, cursor, and unknown parameters
+    for invalid_params in [
+        {"page_size": 0},
+        {"page_size": 101},
+        {"page_size": "abc"},
+        {"cursor": "not-a-valid-uuid"},
+        {"cursor": ""},
+        {"unexpected": "parameter"},
+    ]:
+        err_resp = client.get("/api/v1/documents", invalid_params)
+        assert err_resp.status_code == 400
+        assert err_resp.json()["code"] == "INVALID_REQUEST"
+
+
+def test_file_cursor_pagination_traverses_beyond_100_records():
+    client, user = signed_client()
+    for i in range(105):
+        PrivateAsset.objects.create(
+            owner=user,
+            object_version=f"file-v{i}",
+            state="ACCEPTED",
+            declared_size=100 + i,
+        )
+
+    # 1. Default page returns 100 items and next_cursor
+    first_page = client.get("/api/v1/files")
+    assert first_page.status_code == 200
+    first_data = first_page.json()
+    assert len(first_data["items"]) == 100
+    assert first_data["next_cursor"] is not None
+    assert first_data["next_cursor"] == str(first_data["items"][-1]["id"])
+
+    # 2. Complete traversal collects 105 records
+    all_files = []
+    cursor = None
+    while True:
+        params = {"cursor": cursor} if cursor else {}
+        resp = client.get("/api/v1/files", params)
+        assert resp.status_code == 200
+        page = resp.json()
+        all_files.extend(page["items"])
+        cursor = page["next_cursor"]
+        if not cursor:
+            break
+    assert len(all_files) == 105
+    all_ids = [f["id"] for f in all_files]
+    assert len(set(all_ids)) == 105
+    assert all_ids == sorted(all_ids)
+
+    # 3. Validation: invalid page_size, cursor, and unknown parameters
+    for invalid_params in [
+        {"page_size": 0},
+        {"page_size": 101},
+        {"page_size": -5},
+        {"cursor": "invalid-uuid"},
+        {"cursor": ""},
+        {"unknown": "param"},
+    ]:
+        err_resp = client.get("/api/v1/files", invalid_params)
+        assert err_resp.status_code == 400
+        assert err_resp.json()["code"] == "INVALID_REQUEST"
+
+
+def test_intentional_manual_document_creation_identical_content_distinct_keys():
+    client, user = signed_client()
+    payload = body(title="Same Manual CV", content="Exact identical manual text for testing.")
+    key1 = str(uuid.uuid4())
+    key2 = str(uuid.uuid4())
+
+    doc1 = mutate(client, "documents", payload, key=key1)
+    assert doc1.status_code == 201
+    doc2 = mutate(client, "documents", payload, key=key2)
+    assert doc2.status_code == 201
+
+    assert doc1.json()["id"] != doc2.json()["id"]
+    assert Document.objects.filter(owner=user).count() == 2
+
+    library = client.get("/api/v1/documents").json()["items"]
+    returned_ids = {d["id"] for d in library}
+    assert doc1.json()["id"] in returned_ids
+    assert doc2.json()["id"] in returned_ids
+
+
+def test_retried_saves_retain_idempotency_guarantees_without_duplicate_creation():
+    client, user = signed_client()
+    # 1. Retried document creation
+    create_key = str(uuid.uuid4())
+    doc_payload = body(title="Retry Document", content="First creation content")
+    first_create = mutate(client, "documents", doc_payload, key=create_key)
+    assert first_create.status_code == 201
+    second_create = mutate(client, "documents", doc_payload, key=create_key)
+    assert second_create.status_code == 201
+    assert first_create.json() == second_create.json()
+    assert Document.objects.filter(owner=user).count() == 1
+
+    doc_id = first_create.json()["id"]
+
+    # 2. Retried version save retains client operation ID / idempotency
+    save_key = str(uuid.uuid4())
+    version_payload = {"title": "Version 2", "language": "en", "content": "Updated content"}
+    first_save = mutate(
+        client, f"documents/{doc_id}/versions", version_payload, revision=1, key=save_key
+    )
+    assert first_save.status_code == 200
+    assert first_save.json()["revision"] == 2
+
+    second_save = mutate(
+        client, f"documents/{doc_id}/versions", version_payload, revision=1, key=save_key
+    )
+    assert second_save.status_code == 200
+    assert first_save.json() == second_save.json()
+    assert DocumentVersion.objects.filter(document_id=doc_id).count() == 2
+
+    # 3. Reusing the key with conflicting content returns 409 IDEMPOTENCY_CONFLICT
+    conflicting = mutate(
+        client,
+        f"documents/{doc_id}/versions",
+        {"title": "Conflicting", "language": "en", "content": "Different"},
+        revision=1,
+        key=save_key,
+    )
+    assert conflicting.status_code == 409

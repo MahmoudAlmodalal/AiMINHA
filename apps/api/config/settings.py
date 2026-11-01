@@ -34,6 +34,14 @@ if any(
 ):
     raise ImproperlyConfigured("CSRF origins require HTTPS except explicit local web origins.")
 
+TRUSTED_PROXIES = [
+    ip.strip()
+    for ip in os.environ.get("DJANGO_TRUSTED_PROXIES", os.environ.get("TRUSTED_PROXIES", "")).split(
+        ","
+    )
+    if ip.strip()
+]
+
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",

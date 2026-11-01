@@ -8,7 +8,9 @@ from support.calendar import (
     CalendarError,
     WorkingCalendar,
     add_business_minutes,
+    add_business_seconds,
     business_minutes,
+    business_seconds,
     calendar_from_policy,
 )
 
@@ -142,3 +144,47 @@ def test_a_policy_projection_builds_the_same_calendar():
     built = calendar_from_policy(Policy())
     assert built.working_weekdays == tuple(sorted(WEEKDAYS))
     assert business_minutes(built, local(2026, 10, 19, 9, 0), local(2026, 10, 22, 9, 0)) == 960
+
+
+def test_spring_forward_exact_seconds_arithmetic_across_transition():
+    # Thursday 2026-03-26 16:59:30 is 30 seconds before closing.
+    # 60 seconds of business time rolls 30s into Thursday, skips Fri/Sat,
+    # resumes Sunday 09:00:00+03:00.
+    start = local(2026, 3, 26, 16, 59, 30)
+    due = add_business_seconds(calendar(), start, 60)
+    assert due.astimezone(HEBRON).date() == date(2026, 3, 29)
+    assert due.astimezone(HEBRON).hour == 9
+    assert due.astimezone(HEBRON).minute == 0
+    assert due.astimezone(HEBRON).second == 30
+    assert due.utcoffset() == timedelta(hours=3)
+    assert business_seconds(calendar(), start, due) == 60
+
+
+def test_autumn_back_exact_seconds_arithmetic_across_transition():
+    # Thursday 2026-10-22 16:59:30 is 30 seconds before closing.
+    # 60 seconds of business time rolls 30s into Thursday, skips Fri/Sat,
+    # resumes Sunday 09:00:00+02:00.
+    start = local(2026, 10, 22, 16, 59, 30)
+    due = add_business_seconds(calendar(), start, 60)
+    assert due.astimezone(HEBRON).date() == date(2026, 10, 25)
+    assert due.astimezone(HEBRON).hour == 9
+    assert due.astimezone(HEBRON).minute == 0
+    assert due.astimezone(HEBRON).second == 30
+    assert due.utcoffset() == timedelta(hours=2)
+    assert business_seconds(calendar(), start, due) == 60
+
+
+def test_dst_spring_and_autumn_seconds_roundtrip_inverses():
+    cal = calendar()
+    spring_start = local(2026, 3, 26, 16, 30, 45)
+    autumn_start = local(2026, 10, 22, 16, 30, 45)
+    for seconds in (1, 15, 30, 60, 1800, 3600, 7200, 14400, 28800):
+        spring_due = add_business_seconds(cal, spring_start, seconds)
+        assert business_seconds(cal, spring_start, spring_due) == seconds
+        autumn_due = add_business_seconds(cal, autumn_start, seconds)
+        assert business_seconds(cal, autumn_start, autumn_due) == seconds
+
+
+def test_add_business_seconds_naive_refused():
+    with pytest.raises(CalendarError):
+        add_business_seconds(calendar(), datetime(2026, 10, 19, 9, 0), 60)

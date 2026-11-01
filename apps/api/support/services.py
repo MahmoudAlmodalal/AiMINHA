@@ -275,10 +275,13 @@ def _message(
     )
 
 
-def _cycle(ticket: Ticket) -> SlaCycle | None:
+def _cycle(ticket: Ticket, *, lock: bool = False) -> SlaCycle | None:
     if ticket.sla_cycle_no < 1:
         return None
-    return SlaCycle.objects.filter(ticket=ticket, cycle_no=ticket.sla_cycle_no).first()
+    query = SlaCycle.objects.filter(ticket=ticket, cycle_no=ticket.sla_cycle_no)
+    if lock:
+        query = query.select_for_update()
+    return query.first()
 
 
 def _start_clock(ticket: Ticket, policy: SupportCalendar, now: Any) -> None:
@@ -310,18 +313,36 @@ def _finish_clock(ticket: Ticket, now: Any) -> None:
         return
     moment = now or timezone.now()
     ticket.first_human_response_at = moment
-    cycle = _cycle(ticket)
+    cycle = _cycle(ticket, lock=True)
     if cycle is not None:
         cycle.responded_at = moment
         cycle.state = "COMPLETED"
-        cycle.save(update_fields=["responded_at", "state"])
-    # A reply after the deadline is a breach the moment it is posted, even when the
-    # bounded worker has not run since.
-    if ticket.sla_due_at is not None and moment > ticket.sla_due_at:
+        update_fields = ["responded_at", "state"]
+        # A reply after the deadline is a breach the moment it is posted, even when the
+        # bounded worker has not run since.
+        if ticket.sla_due_at is not None and moment > ticket.sla_due_at:
+            if ticket.sla_breached_at is None:
+                ticket.sla_breached_at = moment
+                cycle.breached_at = moment
+                update_fields.append("breached_at")
+                _event(
+                    ticket,
+                    "SLA_BREACH",
+                    to_state=ticket.state,
+                    reason="FIRST_HUMAN_RESPONSE_OVERDUE",
+                    now=moment,
+                )
+                audit(None, "support_sla_breach", resource=ticket.pk, reason="LATE_FIRST_RESPONSE")
+            elif cycle.breached_at is None:
+                cycle.breached_at = ticket.sla_breached_at
+                update_fields.append("breached_at")
+        cycle.save(update_fields=update_fields)
+    elif (
+        ticket.sla_due_at is not None
+        and moment > ticket.sla_due_at
+        and ticket.sla_breached_at is None
+    ):
         ticket.sla_breached_at = moment
-        if cycle is not None:
-            cycle.breached_at = moment
-            cycle.save(update_fields=["breached_at"])
         _event(
             ticket,
             "SLA_BREACH",
@@ -1194,11 +1215,12 @@ def admin_post_message(
         ticket.row_version += 1
         ticket.updated_at = now
         _start_clock(ticket, policy, now)
+        is_first_response = ticket.first_human_response_at is None
         if substantive:
             _finish_clock(ticket, now)
             _event(
                 ticket,
-                "FIRST_HUMAN_RESPONSE",
+                "FIRST_HUMAN_RESPONSE" if is_first_response else "MESSAGE_ADDED",
                 to_state=ticket.state,
                 actor=actor,
                 reason="SUBSTANTIVE_REPLY",
@@ -1213,20 +1235,11 @@ def admin_post_message(
                 reason="AGENT_ACKNOWLEDGED",
                 now=now,
             )
-        if ticket.state == "AWAITING_STUDENT":
+        if ticket.state != "AWAITING_STUDENT":
             _set_state(
                 ticket,
-                "AWAITING_ADMIN",
+                "AWAITING_STUDENT",
                 "STATE_CHANGED",
-                actor=actor,
-                reason="AGENT_REPLIED",
-                now=now,
-            )
-        else:
-            _event(
-                ticket,
-                "STATE_CHANGED",
-                to_state=ticket.state,
                 actor=actor,
                 reason="AGENT_REPLIED",
                 now=now,
@@ -1254,7 +1267,7 @@ def admin_transition(
         now = timezone.now()
         policy = policy_at(now)
         allowed = {
-            "AWAITING_STUDENT": ("AWAITING_ADMIN",),
+            "AWAITING_STUDENT": ("AWAITING_ADMIN", "RESOLVED"),
             "AWAITING_ADMIN": ("AWAITING_STUDENT", "RESOLVED"),
             "AI_HANDLING": ("AWAITING_ADMIN",),
             "NEW": ("AWAITING_ADMIN",),
@@ -1266,6 +1279,10 @@ def admin_transition(
             ticket.resolved_at = now
             ticket.rating_window_until = now + timedelta(days=policy.rating_edit_days)
         if to_state == "CLOSED":
+            if ticket.resolved_at is not None and now < ticket.resolved_at + timedelta(
+                days=policy.closure_days
+            ):
+                raise IdentityError("QUIET_PERIOD_ACTIVE", 409, "Quiet period is active")
             ticket.closed_at = now
             ticket.reopen_until = now + timedelta(days=policy.reopen_days)
         _set_state(ticket, to_state, "STATE_CHANGED", actor=actor, reason=reason[:64], now=now)
@@ -1464,7 +1481,6 @@ def _sweep_candidates() -> tuple[list[Any], list[Any], list[Any]]:
     measuring = Ticket.objects.filter(
         sla_due_at__isnull=False,
         first_human_response_at__isnull=True,
-        state__in=("NEW", "AI_HANDLING", "AWAITING_ADMIN", "AWAITING_STUDENT"),
     )
     warnings = list(measuring.filter(sla_warning_at__isnull=True).order_by("sla_due_at")[:200])
     breaches = list(measuring.filter(sla_breached_at__isnull=True).order_by("sla_due_at")[:200])
@@ -1498,6 +1514,7 @@ def _mark_warning(ticket_id: Any, now: Any) -> bool:
     threshold = ticket.sla_target_minutes * ticket.sla_policy.warning_percent // 100
     if elapsed < threshold:
         return False
+    cycle = _cycle(ticket, lock=True)
     ticket.sla_warning_at = now
     ticket.updated_at = now
     _event(
@@ -1507,7 +1524,6 @@ def _mark_warning(ticket_id: Any, now: Any) -> bool:
         reason=f"ELAPSED_{elapsed}_MINUTES",
         now=now,
     )
-    cycle = _cycle(ticket)
     if cycle is not None and cycle.warning_at is None:
         cycle.warning_at = now
         cycle.save(update_fields=["warning_at"])
@@ -1523,6 +1539,7 @@ def _mark_breach(ticket_id: Any, now: Any) -> bool:
         return False
     if ticket.sla_due_at is None or now <= ticket.sla_due_at:
         return False
+    cycle = _cycle(ticket, lock=True)
     ticket.sla_breached_at = now
     ticket.updated_at = now
     _event(
@@ -1532,7 +1549,6 @@ def _mark_breach(ticket_id: Any, now: Any) -> bool:
         reason="FIRST_HUMAN_RESPONSE_OVERDUE",
         now=now,
     )
-    cycle = _cycle(ticket)
     if cycle is not None and cycle.breached_at is None:
         cycle.breached_at = now
         cycle.save(update_fields=["breached_at"])

@@ -29,7 +29,7 @@ from private_files.models import StorageLock
 from rest_framework.test import APIClient
 from support import calendar as workcal
 from support import services
-from support.models import SupportCalendar, SupportCalendarHead, Ticket
+from support.models import SlaCycle, SupportCalendar, SupportCalendarHead, Ticket, TicketEvent
 
 pytestmark = pytest.mark.django_db
 PASSWORD = "Synthetic-support-review-passphrase-529!"  # noqa: S105 -- public synthetic fixture.
@@ -1234,6 +1234,161 @@ def test_a_late_first_reply_records_the_breach_immediately():
     assert value["breached"] is True
     metrics = agent_client.get("/api/v1/admin/support/metrics").json()["tickets"]
     assert metrics["sla_breaches"] >= 1
+
+
+def test_student_confirming_resolution_does_not_prematurely_close_before_quiet_period():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    row = assign(agent_client, agent_user, ticket)
+    resolved = request(
+        agent_client,
+        "post",
+        f"admin/tickets/{ticket['id']}/transitions",
+        {"to_state": "RESOLVED", "reason_code": "ANSWERED"},
+        revision=row["row_version"],
+    ).json()
+    assert resolved["state"] == "RESOLVED"
+    confirmed = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/transitions",
+        {"to_state": "RESOLVED", "reason_code": "STUDENT_CONFIRMED"},
+        revision=resolved["row_version"],
+    )
+    assert confirmed.status_code == 200, confirmed.content
+    assert confirmed.json()["state"] == "RESOLVED"
+    # Ticket remains in RESOLVED; sweep does not close it until quiet period has elapsed.
+    assert services.sweep()["closed"] == 0
+    assert Ticket.objects.get(pk=ticket["id"]).state == "RESOLVED"
+
+
+def test_admin_cannot_prematurely_close_resolved_ticket_before_quiet_period():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    row = assign(agent_client, agent_user, ticket)
+    resolved = request(
+        agent_client,
+        "post",
+        f"admin/tickets/{ticket['id']}/transitions",
+        {"to_state": "RESOLVED", "reason_code": "ANSWERED"},
+        revision=row["row_version"],
+    ).json()
+    refused = request(
+        agent_client,
+        "post",
+        f"admin/tickets/{ticket['id']}/transitions",
+        {"to_state": "CLOSED", "reason_code": "PREMATURE_CLOSE"},
+        revision=resolved["row_version"],
+    )
+    assert refused.status_code == 409
+    assert refused.json()["code"] == "QUIET_PERIOD_ACTIVE"
+
+
+def test_admin_acknowledgement_sets_queue_ownership_and_followup_preserves_it():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assert ticket["state"] == "AWAITING_ADMIN"
+    assign(agent_client, agent_user, ticket)
+    # Admin acknowledges receipt: does not complete SLA, but queue ownership moves to student.
+    first = agent_reply(agent_client, ticket, "We will look into your issue shortly.")
+    assert first["state"] == "AWAITING_STUDENT"
+    assert sla(client, ticket)["met"] is False
+    # Admin sends follow-up substantive answer: keeps AWAITING_STUDENT state and completes SLA.
+    followup = agent_reply(agent_client, ticket, "Please upload a PNG copy of the transcript.")
+    assert followup["state"] == "AWAITING_STUDENT"
+    assert sla(client, ticket)["met"] is True
+    # Student replies: moves ticket back to AWAITING_ADMIN.
+    student_reply = request(
+        client,
+        "post",
+        f"tickets/{ticket['id']}/messages",
+        {"body": "I have uploaded the PNG file.", "request_human": False},
+    )
+    assert student_reply.status_code == 200
+    assert student_reply.json()["state"] == "AWAITING_ADMIN"
+
+
+def test_admin_consecutive_followups_keep_awaiting_student_state():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+    first = agent_reply(agent_client, ticket, "Initial substantive answer.")
+    assert first["state"] == "AWAITING_STUDENT"
+    second = agent_reply(agent_client, ticket, "Second admin follow-up message.")
+    assert second["state"] == "AWAITING_STUDENT"
+    third = agent_reply(agent_client, ticket, "Third admin follow-up note.")
+    assert third["state"] == "AWAITING_STUDENT"
+
+
+def test_late_first_reply_preserves_earlier_breach_timestamp():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    assign(agent_client, agent_user, ticket)
+    breach_instant = timezone.now() - timedelta(minutes=10)
+    Ticket.objects.filter(pk=ticket["id"]).update(
+        sla_due_at=timezone.now() - timedelta(minutes=15),
+        sla_breached_at=breach_instant,
+    )
+    SlaCycle.objects.filter(ticket_id=ticket["id"]).update(breached_at=breach_instant)
+    current_head = Ticket.objects.get(pk=ticket["id"]).head_sequence
+    TicketEvent.objects.create(
+        ticket_id=ticket["id"],
+        sequence=current_head + 1,
+        from_state="AWAITING_ADMIN",
+        to_state="AWAITING_ADMIN",
+        kind="SLA_BREACH",
+        reason="FIRST_HUMAN_RESPONSE_OVERDUE",
+        observed_at=breach_instant,
+        recorded_at=breach_instant,
+    )
+    Ticket.objects.filter(pk=ticket["id"]).update(head_sequence=current_head + 1)
+    # Admin replies late:
+    agent_reply(agent_client, ticket, "Late substantive human response.")
+    value = sla(client, ticket)
+    assert value["met"] is True
+    assert value["breached"] is True
+    # The breach timestamp must be preserved, not overwritten by reply instant:
+    t = Ticket.objects.get(pk=ticket["id"])
+    assert t.sla_breached_at == breach_instant
+    cycle = SlaCycle.objects.get(ticket_id=ticket["id"], cycle_no=1)
+    assert cycle.breached_at == breach_instant
+    assert cycle.state == "COMPLETED"
+    # Only one SLA_BREACH event exists:
+    assert TicketEvent.objects.filter(ticket_id=ticket["id"], kind="SLA_BREACH").count() == 1
+
+
+def test_unanswered_sla_cycle_breaches_after_ticket_is_resolved():
+    client, _ = student()
+    agent_client, agent_user = agent()
+    ticket = create_ticket(client, request_human=True)
+    row = assign(agent_client, agent_user, ticket)
+    # Admin resolves without replying:
+    resolved = request(
+        agent_client,
+        "post",
+        f"admin/tickets/{ticket['id']}/transitions",
+        {"to_state": "RESOLVED", "reason_code": "RESOLVED_WITHOUT_REPLY"},
+        revision=row["row_version"],
+    )
+    assert resolved.status_code == 200
+    assert resolved.json()["state"] == "RESOLVED"
+    # Unanswered cycle has due date in past:
+    Ticket.objects.filter(pk=ticket["id"]).update(sla_due_at=timezone.now() - timedelta(minutes=5))
+    SlaCycle.objects.filter(ticket_id=ticket["id"]).update(
+        due_at=timezone.now() - timedelta(minutes=5)
+    )
+    # Sweep processes unanswered cycle candidates even in RESOLVED state:
+    result = services.sweep()
+    assert result["breaches"] == 1
+    t = Ticket.objects.get(pk=ticket["id"])
+    assert t.sla_breached_at is not None
+    cycle = SlaCycle.objects.get(ticket_id=ticket["id"], cycle_no=1)
+    assert cycle.breached_at is not None
 
 
 # --- 13: exact business-hour arithmetic -------------------------------------

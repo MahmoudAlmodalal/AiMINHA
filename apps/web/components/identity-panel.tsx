@@ -82,6 +82,29 @@ export function IdentityPanel({ locale }: { locale: "ar" | "en" }) {
     }
   }, [ar]);
 
+  async function refreshImpact(manual = false) {
+    setConfirmed(false);
+    try {
+      const result = await client.GET("/api/v1/account/deletions/impact");
+      if (result.response.ok && result.data) {
+        setImpact(result.data);
+        if (!result.data.available) {
+          setConfirmed(false);
+        }
+        if (manual) {
+          setMessage(ar ? "تم تحديث مراجعة أثر الحذف." : "Deletion-impact review refreshed.");
+          setFailed(false);
+        }
+      } else {
+        setImpact(null);
+        setConfirmed(false);
+      }
+    } catch {
+      setImpact(null);
+      setConfirmed(false);
+    }
+  }
+
   useEffect(() => {
     if (!session || session.roles[0] !== "STUDENT") return;
     void client.GET("/api/v1/consents/disclosures").then(result => {
@@ -189,12 +212,18 @@ export function IdentityPanel({ locale }: { locale: "ar" | "en" }) {
       <p>{ar ? "الحذف يوقف الوصول فورًا. تُثبت مهلة الاستعادة عند التأكيد، ولا تُقبل الاستعادة عند لحظة انتهائها. لا يعني الطلب محو النسخ الاحتياطية فورًا." : "Deletion stops access immediately. The recovery deadline is fixed at confirmation; restoration at that exact instant is too late. This does not promise immediate backup erasure."}</p>
       {impact && <p>{ar ? "المهلة الحالية بالأيام الكاملة: " : "Current period in full elapsed days: "}{impact.recovery_days} · <bdi>{impact.recovery_timezone}</bdi></p>}
       {!impact?.available && <p>{ar ? "الحذف غير متاح حاليًا حتى اعتماد سياسة الاحتفاظ." : "Deletion is currently unavailable pending retention policy approval."}</p>}
-      <label className="confirm"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} />
+      <button type="button" disabled={busy} onClick={() => void refreshImpact(true)}>{ar ? "تحديث مراجعة أثر الحذف" : "Refresh deletion-impact review"}</button>
+      <label className="confirm"><input type="checkbox" checked={confirmed && Boolean(impact?.available)} onChange={e => setConfirmed(e.target.checked && Boolean(impact?.available))} />
         {ar ? "أفهم أثر الحذف وأؤكد الطلب" : "I understand the impact and confirm deletion"}</label>
       <button disabled={busy || !confirmed || !password || !impact?.available} onClick={() => void run(async () => {
         const reauthentication_token = await reauth();
         const result = await client.POST("/api/v1/account/deletions", { body: { confirm_impact: true, reauthentication_token }, params: { header: await headers() } });
-        if (!result.data || !result.response.ok) throw new Error(result.error?.code);
+        if (!result.data || !result.response.ok) {
+          if (result.error?.code === "IMPACT_REVIEW_REQUIRED") {
+            await refreshImpact();
+          }
+          throw new Error(result.error?.code);
+        }
         setSession(null); setDisclosures([]); setImpact(null); setConfirmed(false); setEmail(""); setBirthDate("");
         setMessage((ar ? "توقف الوصول. آخر موعد للاستعادة UTC: " : "Access stopped. Recovery deadline UTC: ") + result.data.restore_until);
       })}>{ar ? "تأكيد حذف الحساب" : "Confirm account deletion"}</button>

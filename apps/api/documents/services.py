@@ -175,11 +175,33 @@ def read_document(
 
 @transaction.atomic
 def list_documents(
-    user: Account, proof: IdentitySession, correlation: Any = None
-) -> list[Document]:
+    user: Account,
+    proof: IdentitySession,
+    correlation_id: Any = None,
+    cursor: UUID | str | None = None,
+    page_size: int = 100,
+    **kwargs: Any,
+) -> tuple[list[Document], str | None]:
+    correlation = correlation_id if correlation_id is not None else kwargs.get("correlation")
     user = student(user, proof)
     audit(user, "document_library_list", correlation=correlation)
-    return list(Document.objects.filter(owner=user).select_related("current").order_by("pk")[:100])
+    if not isinstance(page_size, int) or page_size < 1 or page_size > 100:
+        raise IdentityError("INVALID_REQUEST", 400, "Invalid page size")
+    cursor_val: UUID | None = None
+    if cursor is not None:
+        if isinstance(cursor, UUID):
+            cursor_val = cursor
+        else:
+            try:
+                cursor_val = UUID(str(cursor))
+            except (ValueError, TypeError, AttributeError) as exc:
+                raise IdentityError("INVALID_REQUEST", 400, "Invalid cursor") from exc
+    query = Document.objects.filter(owner=user).select_related("current").order_by("pk")
+    if cursor_val is not None:
+        query = query.filter(pk__gt=cursor_val)
+    rows = list(query[: page_size + 1])
+    next_cursor = str(rows[page_size - 1].pk) if len(rows) > page_size else None
+    return rows[:page_size], next_cursor
 
 
 def check_revision(document: Document, expected: int) -> None:

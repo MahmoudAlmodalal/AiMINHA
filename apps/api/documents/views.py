@@ -56,16 +56,32 @@ class DocumentsView(StudentView):
         operation_id="listOwnedDocuments", responses={200: dto.DocumentPageSerializer, **ERRORS}
     )
     def get(self, request: Any) -> Response:
-        if request.query_params:
-            raise IdentityError(
-                "INVALID_REQUEST", 400, "Document ownership comes from your session"
-            )
-        items = services.list_documents(request.user, request.auth, request.correlation_id)
+        if set(request.query_params) - {"cursor", "page_size"}:
+            raise IdentityError("INVALID_REQUEST", 400, "Invalid query parameters")
+        if any(len(values) != 1 for _, values in request.query_params.lists()):
+            raise IdentityError("INVALID_REQUEST", 400, "Invalid query parameters")
+        page_size = 100
+        if "page_size" in request.query_params:
+            try:
+                page_size = int(request.query_params["page_size"])
+            except (ValueError, TypeError) as exc:
+                raise IdentityError("INVALID_REQUEST", 400, "Invalid page size") from exc
+            if page_size < 1 or page_size > 100:
+                raise IdentityError("INVALID_REQUEST", 400, "Invalid page size")
+        cursor = None
+        if "cursor" in request.query_params:
+            try:
+                cursor = UUID(request.query_params["cursor"])
+            except (ValueError, TypeError, AttributeError) as exc:
+                raise IdentityError("INVALID_REQUEST", 400, "Invalid cursor") from exc
+        items, next_cursor = services.list_documents(
+            request.user, request.auth, request.correlation_id, cursor=cursor, page_size=page_size
+        )
         return Response(
             dto.DocumentPageSerializer(
                 {
                     "items": [services.document_data(row) for row in items],
-                    "next_cursor": None,
+                    "next_cursor": next_cursor,
                 }
             ).data
         )

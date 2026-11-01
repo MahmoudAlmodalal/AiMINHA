@@ -701,3 +701,58 @@ def test_verification_resend_invalidates_prior_challenge(client):
     assert current != old
     assert post(client, "auth/email-verifications", {"challenge_token": old}).status_code == 400
     assert post(client, "auth/email-verifications", {"challenge_token": current}).status_code == 200
+
+
+def test_failed_sign_in_conceals_account_membership_and_triggers_hashing(client):
+    from django.contrib.auth.hashers import get_hasher, make_password
+
+    # Path 1: Unknown account triggers make_password
+    with patch("identity.services.make_password", wraps=make_password) as mock_make:
+        res_unknown = post(
+            client,
+            "session/login",
+            {"email": "unknown-user@example.invalid", "password": PASSWORD},
+        )
+        assert mock_make.call_count == 1
+        assert mock_make.call_args[0][0] == PASSWORD
+
+    # Path 2: Existing account with wrong password triggers check_password
+    user = account(email="real-user@example.invalid")
+    with patch.object(Account, "check_password", wraps=user.check_password) as mock_check:
+        res_existing = post(
+            client,
+            "session/login",
+            {"email": user.email, "password": "WrongPassword-482!"},
+        )
+        assert mock_check.call_count == 1
+
+    # Both paths return HTTP 401 and identical payload
+    assert res_unknown.status_code == 401
+    assert res_existing.status_code == 401
+
+    payload_unknown = res_unknown.json()
+    payload_existing = res_existing.json()
+
+    assert payload_unknown["code"] == "INVALID_CREDENTIALS"
+    assert payload_existing["code"] == "INVALID_CREDENTIALS"
+    assert payload_unknown["detail"] == "Sign in failed"
+    assert payload_existing["detail"] == "Sign in failed"
+    assert payload_unknown["title"] == payload_existing["title"]
+
+    # Both paths perform equivalent password hasher work (exactly 1 encode)
+    hasher = get_hasher()
+    with patch.object(hasher, "encode", wraps=hasher.encode) as mock_encode:
+        post(
+            client,
+            "session/login",
+            {"email": "unknown-second@example.invalid", "password": PASSWORD},
+        )
+        assert mock_encode.call_count == 1
+
+    with patch.object(hasher, "encode", wraps=hasher.encode) as mock_encode:
+        post(
+            client,
+            "session/login",
+            {"email": user.email, "password": "WrongPassword-482!"},
+        )
+        assert mock_encode.call_count == 1

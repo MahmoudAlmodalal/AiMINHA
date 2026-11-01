@@ -16,3 +16,8 @@
 .actions .attach { margin-block: 0; }
 .actions select { padding: .7rem; font: inherit; border: 1px solid #6b807a; border-radius: .3rem; background: var(--surface); color: var(--text); }
 .status { min-height: 1.8rem; }
+.ticket-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-block: 1rem; }
+.ticket-pagination select { padding: .4rem .6rem; font: inherit; border: 1px solid #6b807a; border-radius: .3rem; background: var(--surface); color: var(--text); }
+.page-size-selector { display: inline-flex; align-items: center; gap: .4rem; margin-block: 0; font-size: .875rem; }
+.secondary-detail { color: var(--secondary); font-size: .875rem; margin-inline-start: .25rem; }
+.attachment-status { display: inline-block; margin-inline-start: .35rem; }

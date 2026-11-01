@@ -67,6 +67,22 @@ async function jsonRequest(path: string, init: RequestInit = {}): Promise<unknow
   return body;
 }
 
+async function fetchAllPages(path: string, init: RequestInit = {}): Promise<unknown[]> {
+  const all: unknown[] = [];
+  let cursor: string | null = null;
+  while (true) {
+    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+    const res = record(await jsonRequest(`${path}${query}`, init));
+    if (!Array.isArray(res.items)) throw new RequestFailure("INVALID_RESPONSE");
+    all.push(...res.items);
+    if (!res.next_cursor || typeof res.next_cursor !== "string") {
+      break;
+    }
+    cursor = res.next_cursor;
+  }
+  return all;
+}
+
 export function DocumentWorkspace({ locale }: { locale: Language }) {
   const ar = locale === "ar";
   const [access, setAccess] = useState<Access>("loading");
@@ -159,13 +175,13 @@ export function DocumentWorkspace({ locale }: { locale: Language }) {
         const proof = validateSession(session.data);
         if (proof.roles[0] !== "STUDENT" || Date.parse(proof.expires_at) <= Date.now()) { clearPrivate(); setAccess("denied"); return; }
         const results = await Promise.all([
-          jsonRequest("/documents", { signal: controller.signal }), jsonRequest("/files", { signal: controller.signal }),
+          fetchAllPages("/documents", { signal: controller.signal }), fetchAllPages("/files", { signal: controller.signal }),
           jsonRequest("/files/capabilities", { signal: controller.signal }), jsonRequest("/documents/capabilities", { signal: controller.signal }),
         ]);
         if (controller.signal.aborted) return;
         const caps = record(results[2]);
         if (typeof caps.upload_available !== "boolean" || !Number.isInteger(caps.max_file_bytes) || !Number.isInteger(caps.max_student_bytes)) throw new RequestFailure("INVALID_RESPONSE");
-        setDocuments(items(results[0]).map(document)); setAssets(items(results[1]).map(asset));
+        setDocuments(results[0].map(document)); setAssets(results[1].map(asset));
         setCapabilities({ upload_available: caps.upload_available, max_file_bytes: Number(caps.max_file_bytes), max_student_bytes: Number(caps.max_student_bytes) });
         setManualAvailable(record(results[3]).manual_editing === true); setAccess("ready");
       } catch (error) {

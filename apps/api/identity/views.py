@@ -22,6 +22,7 @@ from identity.security import (
     VerifiedAdult,
     audit,
     digest,
+    get_client_ip,
     require_student,
     session_data,
     throttle,
@@ -75,7 +76,7 @@ class IdentityView(APIView):
         return {"accepted": True, "correlation_id": self.request.correlation_id}
 
     def limit(self, name: str, email: str | None = None) -> None:
-        throttle(name + ":ip", self.request.META.get("REMOTE_ADDR", "unknown"))
+        throttle(name + ":ip", get_client_ip(self.request))
         if email:
             throttle(name + ":identity", email.strip().lower())
 
@@ -433,13 +434,38 @@ class FilesView(IdentityView):
         operation_id="listOwnFileMetadata", responses={200: dto.FilePageSerializer, **ERRORS}
     )
     def get(self, request: Any) -> Response:
+        if set(request.query_params) - {"cursor", "page_size"}:
+            raise IdentityError("INVALID_REQUEST", 400, "Invalid query parameters")
+        if any(len(values) != 1 for _, values in request.query_params.lists()):
+            raise IdentityError("INVALID_REQUEST", 400, "Invalid query parameters")
+        page_size = 100
+        if "page_size" in request.query_params:
+            try:
+                page_size = int(request.query_params["page_size"])
+            except (ValueError, TypeError) as exc:
+                raise IdentityError("INVALID_REQUEST", 400, "Invalid page size") from exc
+            if page_size < 1 or page_size > 100:
+                raise IdentityError("INVALID_REQUEST", 400, "Invalid page size")
+        cursor = None
+        if "cursor" in request.query_params:
+            try:
+                cursor = UUID(request.query_params["cursor"])
+            except (ValueError, TypeError, AttributeError) as exc:
+                raise IdentityError("INVALID_REQUEST", 400, "Invalid cursor") from exc
         with transaction.atomic():
             actor = Account.objects.select_for_update().get(pk=request.user.pk)
             require_student(actor)
             audit(actor, "private_file_library_list", correlation=request.correlation_id)
-            rows = list(PrivateAsset.objects.filter(owner=actor).order_by("pk")[:100])
+            query = PrivateAsset.objects.filter(owner=actor).order_by("pk")
+            if cursor is not None:
+                query = query.filter(pk__gt=cursor)
+            rows = list(query[: page_size + 1])
+            next_cursor = str(rows[page_size - 1].pk) if len(rows) > page_size else None
             return Response(
-                {"items": [privacy.asset_data(row) for row in rows], "next_cursor": None}
+                {
+                    "items": [privacy.asset_data(r) for r in rows[:page_size]],
+                    "next_cursor": next_cursor,
+                }
             )
 
 

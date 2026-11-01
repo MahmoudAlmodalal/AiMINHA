@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from django.conf import settings
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
@@ -136,8 +136,7 @@ def verify_email(token: str, correlation: Any) -> None:
 def sign_in(request: Any, data: dict[str, Any]) -> dict[str, Any]:
     user = Account.objects.select_for_update().filter(email__iexact=data["email"].strip()).first()
     if user is None:
-        check_password(data["password"], make_password(None))
-        # Perform the normal password hasher work too for an unknown identity.
+        # Perform equivalent expensive password-hashing work without timing leak.
         make_password(data["password"])
         raise IdentityError("INVALID_CREDENTIALS", 401, "Sign in failed")
     if (

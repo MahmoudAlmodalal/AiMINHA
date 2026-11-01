@@ -27,6 +27,30 @@ def digest(value: str) -> str:
     return hmac.new(settings.SECRET_KEY.encode(), value.encode(), hashlib.sha256).hexdigest()
 
 
+def get_client_ip(request: Any) -> str:
+    remote_addr = (request.META.get("REMOTE_ADDR") or "").strip()
+    trusted = {"127.0.0.1", "::1"}
+    configured = getattr(settings, "TRUSTED_PROXIES", [])
+    if isinstance(configured, str):
+        trusted.update(ip.strip() for ip in configured.split(",") if ip.strip())
+    elif isinstance(configured, (list, tuple, set)):
+        trusted.update(ip.strip() for ip in configured if ip.strip())
+
+    if not remote_addr or remote_addr not in trusted:
+        return remote_addr or "unknown"
+
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if not forwarded_for:
+        return remote_addr
+
+    entries = [ip.strip() for ip in forwarded_for.split(",") if ip.strip()]
+    for ip in reversed(entries):
+        if ip not in trusted:
+            return ip
+
+    return remote_addr
+
+
 def adult(birth_date: date, today: date | None = None) -> bool:
     today = today or timezone.now().date()
     if birth_date > today or birth_date.year + 18 > today.year:
